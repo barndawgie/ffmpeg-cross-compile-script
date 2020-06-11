@@ -27,7 +27,7 @@ pushd SDL
 hg update -r $SDL_release
 hg pull -u -r $SDL_release
 ./autogen.sh
-mkdir build
+mkdir -p build
 cd build
 ../configure $configure_params
 make -j $threads install
@@ -39,7 +39,6 @@ then
     git clone https://github.com/mstorsjo/fdk-aac.git fdk-aac
 fi
 pushd fdk-aac
-git pull
 git fetch --tags
 git checkout $fdk_release -B release
 ./autogen.sh
@@ -53,7 +52,6 @@ then
     git clone https://code.videolan.org/videolan/x264.git x264
 fi
 pushd x264
-git pull
 git fetch --tags
 git checkout stable
 ./configure --host=$host --enable-static --cross-prefix=$host- --prefix=$prefix
@@ -79,7 +77,6 @@ then
     git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 fi
 pushd ffmpeg
-git pull
 git fetch --tags
 git checkout $ffmpeg_release -B release
 ./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config --pkg-config-flags=--static --prefix=$prefix --extra-libs=-lstdc++ --extra-cflags="$compiler_params" --extra-cxxflags="$compiler_params" --extra-ldflags="$compiler_params" --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" --logfile=./config.log --enable-nonfree --enable-gpl --enable-libfdk-aac --enable-libx264 --enable-libx265
