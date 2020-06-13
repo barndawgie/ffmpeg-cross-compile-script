@@ -1,7 +1,3 @@
 #Ignore Repos and Builds
-SDL
-fdk-aac
+Packages
 ffmpeg
-ffmpeg_install
-x264
-x265
