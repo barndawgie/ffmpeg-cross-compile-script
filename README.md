@@ -7,7 +7,10 @@ This (non-free) build includes stable releases of:
 * x264
 * x265
 * libfdk-aac
-* sdl v2.0.12 (to enable building of ffplay)
+* SDL v2.0.12 (to enable building of ffplay)
+* libfreetype, libfontconfit, and libfribidi (for Drawtext support)
+* libxml2
+
 
 Tested using Ubuntu 18.04 running on WSL.
 
