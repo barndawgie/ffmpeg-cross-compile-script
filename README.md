@@ -16,7 +16,7 @@ Tested using Ubuntu 18.04 running on WSL.
 
 # Usage
 
-Install all dependencies but running the following command:
+Install all dependencies by running the following command:
 
 `./Prep_System.sh`
 
