@@ -13,8 +13,8 @@ Tested using Ubuntu 18.04 running on WSL.
 
 # Usage
 
-Install all dependencies but running the following command (you may need to `sudo`):
+Install all dependencies but running the following command:
 
-`apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 yasm make automake autoconf git pkg-config libtool nasm mercurial cmake`
+`./Prep_System.sh`
 
 Then simply execute the script; it will pull required packages down from Git and Mercurial, cross-compile for 64-bit Windows, deposit the resulting binaries in `./ffmpeg_install/bin/`.
