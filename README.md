@@ -20,4 +20,4 @@ Install all dependencies by running the following command:
 
 `./Prep_System.sh`
 
-Then simply execute the script; it will pull required packages down from Git and Mercurial, cross-compile for 64-bit Windows, deposit the resulting binaries in `./ffmpeg_install/bin/`.
+Then simply execute the script; it will pull required packages down from Git and Mercurial, cross-compile for 64-bit Windows, and deposit the resulting binaries in `./ffmpeg_install/bin/`.
