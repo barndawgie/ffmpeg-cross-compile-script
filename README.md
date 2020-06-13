@@ -1,6 +1,6 @@
 # ffmpeg-cross-compile-script
 
-A script to cross-compile FFmpeg for Windows on Ubuntu 18.04.
+A script to cross-compile FFmpeg for Windows on Ubuntu 18.04. It's not dissimlar from the widely known ffmpeg-build-helpers, but uses provided mingw packages rather than requiring you to build your own toolchain, and builds everything for 64-bit Windows.
 
 This (non-free) build includes stable releases of:
 
