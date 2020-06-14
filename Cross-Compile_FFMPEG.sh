@@ -28,6 +28,8 @@ fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.1"
 x264_git="https://code.videolan.org/videolan/x264.git"
 x265_hg="https://bitbucket.org/multicoreware/x265"
+libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
+libopenjpeg_release="v2.3.1"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n4.2.3"
 
@@ -61,8 +63,8 @@ git fetch --tags
 git checkout $zlib_release -B release
 sed -i /"PREFIX ="/d win32/Makefile.gcc
 ./configure -static --prefix=$host-
-BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=x86_64-w64-mingw32- make -f win32/Makefile.gcc
-BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=x86_64-w64-mingw32- make -f win32/Makefile.gcc install
+BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=$host- make -f win32/Makefile.gcc
+BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=$host- make -f win32/Makefile.gcc install
 popd
 
 #Libxml2
@@ -154,9 +156,25 @@ pushd x265
 hg update -r stable
 hg pull -u -r stable
 cd ./build
-cmake -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres -DCMAKE_ASM_YASM_COMPILER=yasm -DCMAKE_CXX_FLAGS="$compiler_params" -DCMAKE_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS="$compiler_params" -DENABLE_CLI=1 -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=0 ../source
+cmake -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=$host-gcc -DCMAKE_CXX_COMPILER=$host-g++ -DCMAKE_RC_COMPILER=$host-windres -DCMAKE_ASM_YASM_COMPILER=yasm -DCMAKE_CXX_FLAGS="$compiler_params" -DCMAKE_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS="$compiler_params" -DENABLE_CLI=1 -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=0 ../source
 make -j $threads
+make install
+popd
 
+#openjpeg: JPEG 2000 Codec
+if [ ! -d ./openjpeg ]
+then
+    git clone $libopenjpeg_git
+fi
+pushd openjpeg
+git fetch --tags
+git checkout $libopenjpeg_release -B release
+mkdir build
+cd build
+cmake .. -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=$host-gcc -DCMAKE_CXX_COMPILER=$host-g++ -DCMAKE_RC_COMPILER=$host-windres -DCMAKE_CXX_FLAGS="$compiler_params" -DCMAKE_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" -DCMAKE_INSTALL_PREFIX=$prefix -DBUILD_THIRDPARTY=TRUE
+      local command="${build_from_dir} -DENABLE_STATIC_RUNTIME=1 -DBUILD_SHARED_LIBS=0 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_FIND_ROOT_PATH=$mingw_w64_x86_64_prefix -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_RANLIB=${cross_prefix}ranlib -DCMAKE_C_COMPILER=${cross_prefix}gcc -DCMAKE_CXX_COMPILER=${cross_prefix}g++ -DCMAKE_RC_COMPILER=${cross_prefix}windres -DCMAKE_INSTALL_PREFIX=$mingw_w64_x86_64_prefix $extra_args"
+
+make -j $threads
 make install
 popd
 
@@ -177,7 +195,8 @@ FFMPEG_OPTIONS="\
     --enable-libfreetype \
     --enable-libfontconfig \
     --enable-libfribidi \
-    --enable-libxml2"
+    --enable-libxml2 \
+    --enable-libopenjpeg"
 ./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config --pkg-config-flags=--static --prefix=$prefix \
     --extra-libs=-lstdc++ --extra-cflags="$compiler_params" --extra-cxxflags="$compiler_params" --extra-ldflags="$compiler_params" \
     --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" --logfile=./config.log $FFMPEG_OPTIONS
