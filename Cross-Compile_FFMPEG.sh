@@ -1,11 +1,7 @@
-
 #!/bin/bash
 set -x
 
-#Install The Following Ubuntu Package Dependencies Before Executing This Script
-#apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 yasm make automake autoconf git pkg-config libtool nasm mercurial cmake python3 python3-pip python3-setuptools python3-wheel gperf gettext autopoint
-#apt install flex byacc
-#pip3 install docwriter
+#Install ubuntu package dependencies before executing this script by running ./Prep_System.sh
 
 #Configure Global Variables
 host="x86_64-w64-mingw32"
@@ -16,41 +12,37 @@ compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
 #Select Package Versions
-ffmpeg_release="n4.2.3"
-fdk_release="v2.0.1"
-SDL_release="release-2.0.12"
+sdl_hg="http://hg.libsdl.org/SDL"
+sdl_release="release-2.0.12"
+zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
-FREETYPE2_release="VER-2-10-0"
-fribidi_release="v1.0.9"
+libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.9.10"
+libfreetype2_git="https://git.savannah.gnu.org/git/freetype/freetype2.git"
+libfreetype2_release="VER-2-10-0"
+fribidi_git="https://github.com/fribidi/fribidi.git"
+fribidi_release="v1.0.9"
+fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.13.92"
+fdk_git="https://github.com/mstorsjo/fdk-aac.git"
+fdk_release="v2.0.1"
+x264_git="https://code.videolan.org/videolan/x264.git"
+x265_hg="https://bitbucket.org/multicoreware/x265"
+ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
+ffmpeg_release="n4.2.3"
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
 
 #Get Packages
-#Install c2man: Needed for libfribidi
-c2man_path=$(which c2man)
-if [ ! -x $c2man_path ]; then
-    if [ ! -d ./c2man ]; then
-    	git clone https://github.com/fribidi/c2man.git
-    fi
-    pushd c2man
-    ./Configure -d -e
-    make depend
-    make
-    make install #Likely requires sudo
-    popd
-fi
-
 #SDL: Required for ffplay compilation
 if [ ! -d ./SDL ]
 then
-    hg clone http://hg.libsdl.org/SDL -r $SDL_release
+    hg clone $sdl_hg -r $sdl_release
 fi
 pushd SDL
-hg update -r $SDL_release
-hg pull -u -r $SDL_release
+hg update -r $sdl_release
+hg pull -u -r $sdl_release
 ./autogen.sh
 mkdir -p build
 cd build
@@ -62,7 +54,7 @@ popd
 #ZLIB: Required for FreeTyep2
 if [ ! -d ./zlib ]
 then
-    git clone https://github.com/madler/zlib.git
+    git clone $zlib_git
 fi
 pushd zlib
 git fetch --tags
@@ -76,7 +68,7 @@ popd
 #Libxml2
 if [ ! -d ./libxml2 ]
 then
-    git clone https://gitlab.gnome.org/GNOME/libxml2.git
+    git clone $libxml2_git
 fi
 pushd libxml2
 git fetch --tags
@@ -89,11 +81,11 @@ popd
 #Libfreetype2: Required for Drawtext Filter
 if [ ! -d ./freetype2 ]
 then
-    git clone https://git.savannah.gnu.org/git/freetype/freetype2.git
+    git clone $libfreetype2_git
 fi
 pushd freetype2
 git fetch --tags
-git checkout $FREETYPE2_release -B release
+git checkout $libfreetype2_release -B release
 ./autogen.sh
 ./configure $configure_params --with-png=no --with-harfbuzz=no
 make -j $threads
@@ -103,7 +95,7 @@ popd
 #libfribidi: Required for Drawtext
 if [ ! -d ./fribidi ]
 then
-    git clone https://github.com/fribidi/fribidi.git
+    git clone $fribidi_git
 fi
 pushd fribidi
 git fetch --tags
@@ -116,7 +108,7 @@ popd
 #Fontconfig: Required? for Drawtext Filter
 if [ ! -d ./fontconfig ]
 then
-    git clone https://gitlab.freedesktop.org/fontconfig/fontconfig.git
+    git clone $fontconfig_git
 fi
 pushd fontconfig
 git fetch --tags
@@ -129,7 +121,7 @@ popd
 #FDK: The Best AAC Codec for ffmpeg
 if [ ! -d ./fdk-aac ]
 then
-    git clone https://github.com/mstorsjo/fdk-aac.git fdk-aac
+    git clone $fdk_git
 fi
 pushd fdk-aac
 git fetch --tags
@@ -143,7 +135,7 @@ popd
 #x264: h.264 Video Encoding for ffmpeg
 if [ ! -d ./x264 ]
 then
-    git clone https://code.videolan.org/videolan/x264.git x264
+    git clone $x264_git
 fi
 pushd x264
 git fetch --tags
@@ -156,7 +148,7 @@ popd
 #x265: HEVC Video Encoding for ffmpeg
 if [ ! -d ./x265 ]
 then
-    hg clone https://bitbucket.org/multicoreware/x265 -r stable
+    hg clone $x265_hg -r stable
 fi
 pushd x265
 hg update -r stable
@@ -171,7 +163,7 @@ popd
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
 then
-    git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
+    git clone $ffmpeg_git
 fi
 pushd ffmpeg
 git fetch --tags
