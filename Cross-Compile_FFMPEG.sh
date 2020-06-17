@@ -31,6 +31,7 @@ fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.13.92"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0"
+lame_download="https://managedway.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.1"
 x264_git="https://code.videolan.org/videolan/x264.git"
@@ -154,6 +155,19 @@ make -j $threads
 make install
 popd
 
+#lameMP3
+if [ ! -d ./lame-3.100 ]
+then
+    wget https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz/download
+    tar -xvzf lame-3.100.tar.gz
+    rm lame-3.100.tar.gz
+fi
+pushd lame-3.100
+./configure $configure_params --disable-gtktest --enable-nasm
+make -j $threads
+make install
+popd
+
 #FDK: The Best AAC Codec for ffmpeg
 if [ ! -d ./fdk-aac ]
 then
@@ -235,11 +249,15 @@ FFMPEG_OPTIONS="\
     --enable-libfontconfig \
     --enable-libfribidi \
     --enable-libxml2 \
-    --enable-libopenjpeg
-    --enable-libass"
-./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config --pkg-config-flags=--static --prefix=$prefix \
-    --extra-libs=-lstdc++ --extra-cflags="$compiler_params" --extra-cxxflags="$compiler_params" --extra-ldflags="$compiler_params" \
-    --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" --logfile=./config.log $FFMPEG_OPTIONS
+    --enable-libopenjpeg \
+    --enable-libass \
+    --enable-libmp3lame"
+./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config \
+   --pkg-config-flags=--static --prefix=$prefix \
+    --extra-libs=-lstdc++ --extra-cflags="$compiler_params -I$include_path" --extra-cxxflags="$compiler_params" \
+    --extra-ldflags="$compiler_params -L$library_path" \
+    --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" \
+    --logfile=./config.log $FFMPEG_OPTIONS
 make -j $threads
 make install
 popd
