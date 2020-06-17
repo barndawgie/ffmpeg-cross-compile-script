@@ -29,6 +29,8 @@ fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.9"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.13.92"
+libass_git="https://github.com/libass/libass.git"
+libass_release="0.14.0"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.1"
 x264_git="https://code.videolan.org/videolan/x264.git"
@@ -138,6 +140,20 @@ make -j $threads
 make install
 popd
 
+#libass
+if [ ! -d ./libass ]
+then
+    git clone $libass_git
+fi
+pushd libass
+git fetch --tags
+git checkout $libass_release -B release
+./autogen.sh
+./configure $configure_params  --disable-harfbuzz
+make -j $threads
+make install
+popd
+
 #FDK: The Best AAC Codec for ffmpeg
 if [ ! -d ./fdk-aac ]
 then
@@ -219,7 +235,8 @@ FFMPEG_OPTIONS="\
     --enable-libfontconfig \
     --enable-libfribidi \
     --enable-libxml2 \
-    --enable-libopenjpeg"
+    --enable-libopenjpeg
+    --enable-libass"
 ./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config --pkg-config-flags=--static --prefix=$prefix \
     --extra-libs=-lstdc++ --extra-cflags="$compiler_params" --extra-cxxflags="$compiler_params" --extra-ldflags="$compiler_params" \
     --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" --logfile=./config.log $FFMPEG_OPTIONS
