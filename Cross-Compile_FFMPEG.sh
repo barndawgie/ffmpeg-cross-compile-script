@@ -31,7 +31,7 @@ x265_hg="https://bitbucket.org/multicoreware/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.3.1"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n4.2.3"
+ffmpeg_release="n4.3"
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
