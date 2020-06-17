@@ -6,6 +6,9 @@ set -x
 #Configure Global Variables
 host="x86_64-w64-mingw32"
 prefix="$(pwd)/ffmpeg_install"
+library_path="$prefix/lib"
+binary_path="$prefix/bin"
+include_path="$prefix/include"
 threads=2
 configure_params="--host=$host --prefix=$prefix --enable-static --disable-shared"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
@@ -16,6 +19,8 @@ sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
+libpng_git="https://github.com/glennrp/libpng.git"
+libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.9.10"
 libfreetype2_git="https://git.savannah.gnu.org/git/freetype/freetype2.git"
@@ -63,8 +68,21 @@ git fetch --tags
 git checkout $zlib_release -B release
 sed -i /"PREFIX ="/d win32/Makefile.gcc
 ./configure -static --prefix=$host-
-BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=$host- make -f win32/Makefile.gcc
-BINARY_PATH=$prefix/bin INCLUDE_PATH=$prefix/include LIBRARY_PATH=$prefix/lib PREFIX=$host- make -f win32/Makefile.gcc install
+BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
+BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
+popd
+
+#libpng: Required for FreeType2
+if [ ! -d ./libpng ]
+then
+    git clone $libpng_git
+fi
+pushd libpng
+git fetch --tags
+git checkout $libpng_release -B release
+LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
+make -j $threads
+make install
 popd
 
 #Libxml2
@@ -89,7 +107,7 @@ pushd freetype2
 git fetch --tags
 git checkout $libfreetype2_release -B release
 ./autogen.sh
-./configure $configure_params --with-png=no --with-harfbuzz=no
+./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=no
 make -j $threads
 make install
 popd
@@ -205,3 +223,4 @@ make install
 popd
 
 popd #Back to upper-level directory
+pushd ffmpeg_install/bin/
