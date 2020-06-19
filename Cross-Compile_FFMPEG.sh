@@ -19,6 +19,9 @@ sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
+bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
+bzip2_release="bzip2-1_0_6"
+bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.6_brokenstuff.diff"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
@@ -75,6 +78,20 @@ BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path P
 BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
 popd
 
+#libbz2
+if [ ! -d ./bzip2 ]
+then
+    git clone $bzip2_git
+fi
+pushd bzip2
+git fetch --tags
+git checkout $bzip2_release -B release
+curl https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.6_brokenstuff.diff -o bzip_patch.diff
+patch -p0 < bzip_patch.diff
+CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
+install -m644 bzlib.h $include_path/bzlib.h
+install -m644 libbz2.a $library_path/libbz2.a
+
 #libpng: Required for FreeType2
 if [ ! -d ./libpng ]
 then
@@ -110,7 +127,7 @@ pushd freetype2
 git fetch --tags
 git checkout $libfreetype2_release -B release
 ./autogen.sh
-./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=no
+BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
 make -j $threads
 make install
 popd
@@ -156,13 +173,14 @@ make install
 popd
 
 #lameMP3
-if [ ! -d ./lame-3.100 ]
+if [ ! -d ./lame-3 ]
 then
-    wget https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz/download
-    tar -xvzf lame-3.100.tar.gz
-    rm lame-3.100.tar.gz
+    mkdir -p lame
+    curl $lame_download -o lame.tar.gz
+    tar -xvzf lame.tar.gz --directory lame --strip-components=1
+    rm lame.tar.gz
 fi
-pushd lame-3.100
+pushd lame
 ./configure $configure_params --disable-gtktest --enable-nasm
 make -j $threads
 make install
