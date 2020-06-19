@@ -15,13 +15,15 @@ compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 
 #Select Package Versions
-sdl_hg="http://hg.libsdl.org/SDL"
-sdl_release="release-2.0.12"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
 bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
 bzip2_release="bzip2-1_0_6"
 bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.6_brokenstuff.diff"
+sdl_hg="http://hg.libsdl.org/SDL"
+sdl_release="release-2.0.12"
+openssl_git="https://github.com/openssl/openssl.git"
+openssl_release="OpenSSL_1_1_1g"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
@@ -48,22 +50,6 @@ mkdir -p packages
 pushd packages #Put all these dependencies somewhere
 
 #Get Packages
-#SDL: Required for ffplay compilation
-if [ ! -d ./SDL ]
-then
-    hg clone $sdl_hg -r $sdl_release
-fi
-pushd SDL
-hg update -r $sdl_release
-hg pull -u -r $sdl_release
-./autogen.sh
-mkdir -p build
-cd build
-../configure $configure_params
-make -j $threads
-make install
-popd
-
 #ZLIB: Required for FreeTyep2
 if [ ! -d ./zlib ]
 then
@@ -91,6 +77,37 @@ patch -p0 < bzip_patch.diff
 CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
 install -m644 bzlib.h $include_path/bzlib.h
 install -m644 libbz2.a $library_path/libbz2.a
+popd
+
+#SDL: Required for ffplay compilation
+if [ ! -d ./SDL ]
+then
+    hg clone $sdl_hg -r $sdl_release
+fi
+pushd SDL
+hg update -r $sdl_release
+hg pull -u -r $sdl_release
+./autogen.sh
+mkdir -p build
+cd build
+../configure $configure_params
+make -j $threads
+make install
+popd
+
+#openssl
+if [ ! -d ./openssl ]
+then
+    git clone $openssl_git
+fi
+pushd openssl
+git fetch --tags
+git checkout $openssl_release -B release
+./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
+CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
+make -j $threads
+make install_sw
+popd
 
 #libpng: Required for FreeType2
 if [ ! -d ./libpng ]
@@ -222,11 +239,19 @@ pushd x265
 hg update -r stable
 hg pull -u -r stable
 cd ./build
-cmake -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=$host-gcc -DCMAKE_CXX_COMPILER=$host-g++ \
-    -DCMAKE_RC_COMPILER=$host-windres -DCMAKE_ASM_YASM_COMPILER=yasm -DCMAKE_CXX_FLAGS="$compiler_params" \
-    -DCMAKE_C_FLAGS="$compiler_params" -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" \
-    -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS="$compiler_params" -DENABLE_CLI=1 \
-    -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=0 ../source
+cmake -DCMAKE_SYSTEM_NAME=Windows \
+    -DCMAKE_C_COMPILER=$host-gcc \
+    -DCMAKE_CXX_COMPILER=$host-g++ \
+    -DCMAKE_RC_COMPILER=$host-windres \
+    -DCMAKE_ASM_YASM_COMPILER=yasm \
+    -DCMAKE_CXX_FLAGS="$compiler_params" \
+    -DCMAKE_C_FLAGS="$compiler_params" \
+    -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" \
+    -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS="$compiler_params" \
+    -DENABLE_CLI=1 \
+    -DCMAKE_INSTALL_PREFIX=$prefix \
+    -DENABLE_SHARED=0 \
+    ../source
 make -j $threads
 make install
 popd
@@ -269,16 +294,26 @@ FFMPEG_OPTIONS="\
     --enable-libxml2 \
     --enable-libopenjpeg \
     --enable-libass \
-    --enable-libmp3lame"
-./configure --arch=x86_64 --target-os=mingw32 --cross-prefix=$host- --pkg-config=pkg-config \
-   --pkg-config-flags=--static --prefix=$prefix \
-    --extra-libs=-lstdc++ --extra-cflags="$compiler_params -I$include_path" --extra-cxxflags="$compiler_params" \
+    --enable-libmp3lame \
+    --enable-openssl"
+./configure --arch=x86_64 \
+    --target-os=mingw32 \
+    --cross-prefix=$host- \
+    --pkg-config=pkg-config \
+    --pkg-config-flags=--static \
+    --prefix=$prefix \
+    --extra-libs=-lstdc++ \
+    --extra-cflags="$compiler_params -I$include_path" \
+    --extra-cxxflags="$compiler_params" \
     --extra-ldflags="$compiler_params -L$library_path" \
-    --extra-ldexeflags="$compiler_params" --extra-ldsoflags="$compiler_params" \
-    --logfile=./config.log $FFMPEG_OPTIONS
+    --extra-ldexeflags="$compiler_params" \
+    --extra-ldsoflags="$compiler_params" \
+    --logfile=./config.log \
+    $FFMPEG_OPTIONS
 make -j $threads
 make install
 popd
 
 popd #Back to upper-level directory
 pushd $binary_path
+ 
