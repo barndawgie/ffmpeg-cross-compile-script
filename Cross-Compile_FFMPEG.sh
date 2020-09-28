@@ -23,13 +23,13 @@ bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpe
 sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 openssl_git="https://github.com/openssl/openssl.git"
-openssl_release="OpenSSL_1_1_1g"
+openssl_release="OpenSSL_1_1_1h"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.9.10"
 libfreetype2_git="https://git.savannah.gnu.org/git/freetype/freetype2.git"
-libfreetype2_release="VER-2-10-0"
+libfreetype2_release="VER-2-10-2"
 fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.9"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
@@ -40,16 +40,17 @@ lame_download="https://managedway.dl.sourceforge.net/project/lame/lame/3.100/lam
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.1"
 x264_git="https://code.videolan.org/videolan/x264.git"
-x265_hg="https://bitbucket.org/multicoreware/x265"
+x265_hg="http://hg.videolan.org/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.3.1"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n4.3"
+ffmpeg_release="n4.3.1"
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
 
-#Get Packages
+#Build and Install Dependences
+#Libs
 #ZLIB: Required for FreeTyep2
 if [ ! -d ./zlib ]
 then
@@ -135,60 +136,7 @@ make -j $threads
 make install
 popd
 
-#Libfreetype2: Required for Drawtext Filter
-if [ ! -d ./freetype2 ]
-then
-    git clone $libfreetype2_git
-fi
-pushd freetype2
-git fetch --tags
-git checkout $libfreetype2_release -B release
-./autogen.sh
-BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
-make -j $threads
-make install
-popd
-
-#libfribidi: Required for Drawtext
-if [ ! -d ./fribidi ]
-then
-    git clone $fribidi_git
-fi
-pushd fribidi
-git fetch --tags
-git checkout $fribidi_release -B release
-./autogen.sh $configure_params
-make -j $threads
-make install
-popd
-
-#Fontconfig: Required? for Drawtext Filter
-if [ ! -d ./fontconfig ]
-then
-    git clone $fontconfig_git
-fi
-pushd fontconfig
-git fetch --tags
-git checkout $fontconfig_release -B release
-./autogen.sh $configure_params --enable-libxml2
-make -j $threads
-make install
-popd
-
-#libass
-if [ ! -d ./libass ]
-then
-    git clone $libass_git
-fi
-pushd libass
-git fetch --tags
-git checkout $libass_release -B release
-./autogen.sh
-./configure $configure_params  --disable-harfbuzz
-make -j $threads
-make install
-popd
-
+#Audio Codecs
 #lameMP3
 if [ ! -d ./lame-3 ]
 then
@@ -217,6 +165,7 @@ make -j $threads
 make install
 popd
 
+#Video Codecs
 #x264: h.264 Video Encoding for ffmpeg
 if [ ! -d ./x264 ]
 then
@@ -274,6 +223,61 @@ make -j $threads
 make install
 popd
 
+# #Subtitle/Font Dependencies
+# #Libfreetype2: Required for Drawtext Filter
+# if [ ! -d ./freetype2 ]
+# then
+#     git clone $libfreetype2_git
+# fi
+# pushd freetype2
+# git fetch --tags
+# git checkout $libfreetype2_release -B release
+# ./autogen.sh
+# BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
+# make -j $threads
+# make install
+# popd
+
+# #libfribidi: Required for Drawtext
+# if [ ! -d ./fribidi ]
+# then
+#     git clone $fribidi_git
+# fi
+# pushd fribidi
+# git fetch --tags
+# git checkout $fribidi_release -B release
+# ./autogen.sh $configure_params
+# make -j $threads
+# make install
+# popd
+
+# #Fontconfig: Required? for Drawtext Filter
+# if [ ! -d ./fontconfig ]
+# then
+#     git clone $fontconfig_git
+# fi
+# pushd fontconfig
+# git fetch --tags
+# git checkout $fontconfig_release -B release
+# ./autogen.sh $configure_params --enable-libxml2
+# make -j $threads
+# make install
+# popd
+
+# #libass
+# if [ ! -d ./libass ]
+# then
+#     git clone $libass_git
+# fi
+# pushd libass
+# git fetch --tags
+# git checkout $libass_release -B release
+# ./autogen.sh
+# ./configure $configure_params  --disable-harfbuzz
+# make -j $threads
+# make install
+# popd
+
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
 then
@@ -288,14 +292,14 @@ FFMPEG_OPTIONS="\
     --enable-libfdk-aac \
     --enable-libx264 \
     --enable-libx265 \
-    --enable-libfreetype \
-    --enable-libfontconfig \
-    --enable-libfribidi \
     --enable-libxml2 \
     --enable-libopenjpeg \
-    --enable-libass \
     --enable-libmp3lame \
     --enable-openssl"
+    # --enable-libfreetype \
+    # --enable-libfontconfig \
+    # --enable-libfribidi \
+    # --enable-libass \
 ./configure --arch=x86_64 \
     --target-os=mingw32 \
     --cross-prefix=$host- \
