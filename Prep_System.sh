@@ -10,7 +10,7 @@ pip3 install docwriter
 mkdir -p packages
 pushd packages
 c2man_path=$(which c2man)
-if [ ! -x $c2man_path ]; then #Doesn't seem to work if there is no c2man installed?
+if [ ! $c2man_path ]; then #Doesn't seem to work if there is no c2man installed?
     if [ ! -d ./c2man ]; then
     	git clone https://github.com/fribidi/c2man.git
     fi
