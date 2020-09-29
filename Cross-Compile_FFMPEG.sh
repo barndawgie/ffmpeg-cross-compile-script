@@ -6,6 +6,7 @@ set -x
 #Configure Global Variables
 host="x86_64-w64-mingw32"
 prefix="$(pwd)/ffmpeg_install"
+patch_dir="$(pwd)/patches"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
@@ -19,8 +20,7 @@ zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
 bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
 bzip2_release="bzip2-1_0_8"
-bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff"
-bzip_patchfile_path="$prefix/../patches/bzip2-1.0.8_brokenstuff.diff"
+bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 openssl_git="https://github.com/openssl/openssl.git"
@@ -58,10 +58,10 @@ FFMPEG_OPTIONS="\
     --enable-libopenjpeg \
     --enable-libmp3lame \
     --enable-openssl \
-    --enable-libfreetype"
-    # --enable-libfontconfig \
-    # --enable-libfribidi \
-    # --enable-libass \
+    --enable-libfreetype
+    --enable-libfontconfig \
+    --enable-libfribidi \
+    --enable-libass"
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
@@ -249,37 +249,51 @@ pushd freetype2
 git fetch --tags
 git checkout $libfreetype2_release -B release
 ./autogen.sh
-#BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
-./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=no #ffmpeg won't configure if bzip2 is included?
+BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
 make -j $threads
 make install
 popd
 
-# #libfribidi: Required for Drawtext
-# if [ ! -d ./fribidi ]
-# then
-#     git clone $fribidi_git
-# fi
-# pushd fribidi
-# git fetch --tags
-# git checkout $fribidi_release -B release
-# ./autogen.sh $configure_params
-# make -j $threads
-# make install
-# popd
+#libfribidi: Required for Drawtext
+if [ ! -d ./fribidi ]
+then
+    git clone $fribidi_git
+fi
+pushd fribidi
+git fetch --tags
+git checkout $fribidi_release -B release
+./autogen.sh $configure_params
+make -j $threads
+make install
+popd
 
-# #Fontconfig: Required? for Drawtext Filter
-# if [ ! -d ./fontconfig ]
-# then
-#     git clone $fontconfig_git
-# fi
-# pushd fontconfig
-# git fetch --tags
-# git checkout $fontconfig_release -B release
-# ./autogen.sh $configure_params --enable-libxml2
-# make -j $threads
-# make install
-# popd
+#Fontconfig: Required? for Drawtext Filter
+if [ ! -d ./fontconfig ]
+then
+    git clone $fontconfig_git
+fi
+pushd fontconfig
+git fetch --tags
+git checkout $fontconfig_release -B release
+CLAGS="-I$include_path" LDFLAGS="-L$library_path" LIBS="-lbz2" ./autogen.sh $configure_params --enable-libxml2
+make -j $threads
+make install
+popd
+
+#libass
+if [ ! -d ./libass ]
+then
+    git clone $libass_git
+fi
+pushd libass
+git fetch --tags
+git checkout $libass_release -B release
+./autogen.sh
+./configure $configure_params  --disable-harfbuzz
+make -j $threads
+make install
+popd
+
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
@@ -309,4 +323,3 @@ popd
 
 popd #Back to upper-level directory
 pushd $binary_path
- 
