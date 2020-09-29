@@ -18,8 +18,9 @@ export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.11"
 bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
-bzip2_release="bzip2-1_0_6"
-bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.6_brokenstuff.diff"
+bzip2_release="bzip2-1_0_8"
+bzip_patchfile="https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff"
+bzip_patchfile_path="$prefix/../patches/bzip2-1.0.8_brokenstuff.diff"
 sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 openssl_git="https://github.com/openssl/openssl.git"
@@ -45,6 +46,22 @@ libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.3.1"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n4.3.1"
+
+#FFMPEG Configuration
+FFMPEG_OPTIONS="\
+    --enable-nonfree \
+    --enable-gpl \
+    --enable-libfdk-aac \
+    --enable-libx264 \
+    --enable-libx265 \
+    --enable-libxml2 \
+    --enable-libopenjpeg \
+    --enable-libmp3lame \
+    --enable-openssl \
+    --enable-libfreetype"
+    # --enable-libfontconfig \
+    # --enable-libfribidi \
+    # --enable-libass \
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
@@ -73,8 +90,7 @@ fi
 pushd bzip2
 git fetch --tags
 git checkout $bzip2_release -B release
-curl https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.6_brokenstuff.diff -o bzip_patch.diff
-patch -p0 < bzip_patch.diff
+patch -p0 < $bzip_patchfile_path
 CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
 install -m644 bzlib.h $include_path/bzlib.h
 install -m644 libbz2.a $library_path/libbz2.a
@@ -224,19 +240,20 @@ make install
 popd
 
 # #Subtitle/Font Dependencies
-# #Libfreetype2: Required for Drawtext Filter
-# if [ ! -d ./freetype2 ]
-# then
-#     git clone $libfreetype2_git
-# fi
-# pushd freetype2
-# git fetch --tags
-# git checkout $libfreetype2_release -B release
-# ./autogen.sh
-# BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
-# make -j $threads
-# make install
-# popd
+#Libfreetype2: Required for Drawtext Filter
+if [ ! -d ./freetype2 ]
+then
+    git clone $libfreetype2_git
+fi
+pushd freetype2
+git fetch --tags
+git checkout $libfreetype2_release -B release
+./autogen.sh
+#BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
+./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=no #ffmpeg won't configure if bzip2 is included?
+make -j $threads
+make install
+popd
 
 # #libfribidi: Required for Drawtext
 # if [ ! -d ./fribidi ]
@@ -264,20 +281,6 @@ popd
 # make install
 # popd
 
-# #libass
-# if [ ! -d ./libass ]
-# then
-#     git clone $libass_git
-# fi
-# pushd libass
-# git fetch --tags
-# git checkout $libass_release -B release
-# ./autogen.sh
-# ./configure $configure_params  --disable-harfbuzz
-# make -j $threads
-# make install
-# popd
-
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
 then
@@ -286,34 +289,20 @@ fi
 pushd ffmpeg
 git fetch --tags
 git checkout $ffmpeg_release -B release
-FFMPEG_OPTIONS="\
-    --enable-nonfree \
-    --enable-gpl \
-    --enable-libfdk-aac \
-    --enable-libx264 \
-    --enable-libx265 \
-    --enable-libxml2 \
-    --enable-libopenjpeg \
-    --enable-libmp3lame \
-    --enable-openssl"
-    # --enable-libfreetype \
-    # --enable-libfontconfig \
-    # --enable-libfribidi \
-    # --enable-libass \
 ./configure --arch=x86_64 \
     --target-os=mingw32 \
     --cross-prefix=$host- \
     --pkg-config=pkg-config \
     --pkg-config-flags=--static \
     --prefix=$prefix \
-    --extra-libs=-lstdc++ \
+    --extra-libs="-lstdc++ -lbz2" \
     --extra-cflags="$compiler_params -I$include_path" \
     --extra-cxxflags="$compiler_params" \
     --extra-ldflags="$compiler_params -L$library_path" \
     --extra-ldexeflags="$compiler_params" \
     --extra-ldsoflags="$compiler_params" \
     --logfile=./config.log \
-    $FFMPEG_OPTIONS
+    $FFMPEG_OPTIONS 
 make -j $threads
 make install
 popd
