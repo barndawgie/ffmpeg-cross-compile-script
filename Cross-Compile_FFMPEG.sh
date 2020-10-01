@@ -7,6 +7,7 @@ set -x
 host="x86_64-w64-mingw32"
 prefix="$(pwd)/ffmpeg_install"
 patch_dir="$(pwd)/patches"
+config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
@@ -204,21 +205,53 @@ pushd x265
 hg update -r stable
 hg pull -u -r stable
 cd ./build
-cmake -DCMAKE_SYSTEM_NAME=Windows \
-    -DCMAKE_C_COMPILER=$host-gcc \
-    -DCMAKE_CXX_COMPILER=$host-g++ \
-    -DCMAKE_RC_COMPILER=$host-windres \
-    -DCMAKE_ASM_YASM_COMPILER=yasm \
-    -DCMAKE_CXX_FLAGS="$compiler_params" \
-    -DCMAKE_C_FLAGS="$compiler_params" \
-    -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" \
-    -DCMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS="$compiler_params" \
-    -DENABLE_CLI=1 \
-    -DCMAKE_INSTALL_PREFIX=$prefix \
-    -DENABLE_SHARED=0 \
-    ../source
+
+mkdir -p 8bit 10bit 12bit
+
+#Build 12-Bit
+pushd 12bit
+cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+	-DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+    -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
+    -DHIGH_BIT_DEPTH=ON -DMAIN12=ON \
+    ../../source
 make -j $threads
+popd
+
+#Build 10-Bit
+pushd 10bit
+cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+    -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+    -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
+    -DHIGH_BIT_DEPTH=ON -DMAIN12=OFF \
+    ../../source
+make -j $threads
+popd
+
+#Build 8-Bit
+pushd 8bit
+ln -sf ../10bit/libx265.a libx265_main10.a
+ln -sf ../12bit/libx265.a libx265_main12.a
+cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+    -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+    -DENABLE_CLI=OFF -DEXPORT_C_API=ON \
+    -DEXTRA_LIB="x265_main10.a;x265_main12.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON \
+    ../../source
+make -j $threads
+
+#Combine all Libraries
+mv libx265.a libx265_main.a
+ar -M <<EOF
+CREATE libx265.a
+ADDLIB libx265_main.a
+ADDLIB libx265_main10.a
+ADDLIB libx265_main12.a
+SAVE
+END
+EOF
+
 make install
+popd
 popd
 
 #openjpeg: JPEG 2000 Codec
@@ -231,10 +264,10 @@ git fetch --tags
 git checkout $libopenjpeg_release -B release
 mkdir build
 cd build
-cmake .. -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=$host-gcc -DCMAKE_CXX_COMPILER=$host-g++ \
-    -DCMAKE_RC_COMPILER=$host-windres -DCMAKE_CXX_FLAGS="$compiler_params" -DCMAKE_C_FLAGS="$compiler_params" \
-    -DCMAKE_SHARED_LIBRARY_LINK_C_FLAGS="$compiler_params" -DCMAKE_INSTALL_PREFIX=$prefix -DBUILD_THIRDPARTY=TRUE \
-    -DBUILD_SHARED_LIBS=0
+cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+	-DCMAKE_INSTALL_PREFIX=$prefix \
+	-DBUILD_THIRDPARTY=TRUE -DBUILD_SHARED_LIBS=0 \
+    ..
 make -j $threads
 make install
 popd
