@@ -209,27 +209,25 @@ cd ./build
 mkdir -p 8bit 10bit 12bit
 
 #Build 12-Bit
-pushd 12bit
+cd 12bit
 cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
 	-DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
     -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
     -DHIGH_BIT_DEPTH=ON -DMAIN12=ON \
     ../../source
 make -j $threads
-popd
 
 #Build 10-Bit
-pushd 10bit
+cd  ../10bit
 cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
     -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
     -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
     -DHIGH_BIT_DEPTH=ON -DMAIN12=OFF \
     ../../source
 make -j $threads
-popd
 
 #Build 8-Bit
-pushd 8bit
+cd ../8bit
 ln -sf ../10bit/libx265.a libx265_main10.a
 ln -sf ../12bit/libx265.a libx265_main12.a
 cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
