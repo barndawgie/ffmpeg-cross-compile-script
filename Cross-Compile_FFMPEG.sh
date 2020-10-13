@@ -45,6 +45,8 @@ x264_git="https://code.videolan.org/videolan/x264.git"
 x265_hg="http://hg.videolan.org/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.3.1"
+libaom_git="https://aomedia.googlesource.com/aom"
+libaom_version="v2.0.0"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n4.3.1"
 
@@ -57,6 +59,7 @@ FFMPEG_OPTIONS="\
     --enable-libx265 \
     --enable-libxml2 \
     --enable-libopenjpeg \
+    --enable-libaom \
     --enable-libmp3lame \
     --enable-openssl \
     --enable-libfreetype
@@ -247,9 +250,7 @@ ADDLIB libx265_main12.a
 SAVE
 END
 EOF
-
 make install
-popd
 popd
 
 #openjpeg: JPEG 2000 Codec
@@ -266,6 +267,20 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
 	-DCMAKE_INSTALL_PREFIX=$prefix \
 	-DBUILD_THIRDPARTY=TRUE -DBUILD_SHARED_LIBS=0 \
     ..
+make -j $threads
+make install
+popd
+
+#libaom: AV1 Codec
+if [ ! -d ./aom ]
+then
+    git clone $libaom_git
+fi
+mkdir aom_build
+pushd aom_build
+cmake -DCMAKE_TOOLCHAIN_FILE="../aom/build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
+    -DCMAKE_INSTALL_PREFIX=$prefix \
+    ../aom
 make -j $threads
 make install
 popd
