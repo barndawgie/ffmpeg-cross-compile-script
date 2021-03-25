@@ -25,13 +25,13 @@ bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.
 sdl_hg="http://hg.libsdl.org/SDL"
 sdl_release="release-2.0.12"
 openssl_git="https://github.com/openssl/openssl.git"
-openssl_release="OpenSSL_1_1_1h"
+openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.9.10"
-libfreetype2_git="https://git.savannah.gnu.org/git/freetype/freetype2.git"
-libfreetype2_release="VER-2-10-2"
+libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
+libfreetype2_release="VER-2-10-4"
 fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.9"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
@@ -44,11 +44,11 @@ fdk_release="v2.0.1"
 x264_git="https://code.videolan.org/videolan/x264.git"
 x265_hg="http://hg.videolan.org/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
-libopenjpeg_release="v2.3.1"
+libopenjpeg_release="v2.4.0"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v2.0.0"
+libaom_version="v3.0.0"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n4.3.1"
+ffmpeg_release="n4.3.2"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -123,7 +123,7 @@ then
 fi
 pushd openssl
 git fetch --tags
-git checkout $openssl_release -B release
+git checkout $openssl_release
 ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
 CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
 make -j $threads
@@ -274,9 +274,14 @@ popd
 #libaom: AV1 Codec
 if [ ! -d ./aom ]
 then
-    git clone $libaom_git
+    git clone $libaom_git aom
 fi
-mkdir aom_build
+pushd aom
+git fetch --tags
+git checkout $libaom_version -B release
+popd
+
+mkdir -p aom_build
 pushd aom_build
 cmake -DCMAKE_TOOLCHAIN_FILE="../aom/build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
     -DCMAKE_INSTALL_PREFIX=$prefix \
@@ -289,7 +294,7 @@ popd
 #Libfreetype2: Required for Drawtext Filter
 if [ ! -d ./freetype2 ]
 then
-    git clone $libfreetype2_git
+    git clone $libfreetype2_git freetype2
 fi
 pushd freetype2
 git fetch --tags
@@ -362,10 +367,10 @@ git checkout $ffmpeg_release -B release
     --extra-ldexeflags="$compiler_params" \
     --extra-ldsoflags="$compiler_params" \
     --logfile=./config.log \
-    $FFMPEG_OPTIONS 
+    $FFMPEG_OPTIONS
 make -j $threads
 make install
 popd
 
 popd #Back to upper-level directory
-pushd $binary_path
+echo "If successful, executables now available at $binary_path"
