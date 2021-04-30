@@ -22,8 +22,8 @@ zlib_release="v1.2.11"
 bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
 bzip2_release="bzip2-1_0_8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
-sdl_hg="http://hg.libsdl.org/SDL"
-sdl_release="release-2.0.12"
+sdl_git="https://github.com/libsdl-org/SDL.git"
+sdl_release="release-2.0.14"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
@@ -33,14 +33,14 @@ libxml2_release="v2.9.10"
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-10-4"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.9"
+fribidi_release="v1.0.10"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.13.92"
+fontconfig_release="2.13.93"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.14.0"
+libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 lame_download="https://managedway.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
-fdk_release="v2.0.1"
+fdk_release="v2.0.2"
 x264_git="https://code.videolan.org/videolan/x264.git"
 x265_hg="http://hg.videolan.org/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
@@ -48,7 +48,7 @@ libopenjpeg_release="v2.4.0"
 libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.0.0"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n4.3.2"
+ffmpeg_release="n4.4"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -103,11 +103,11 @@ popd
 #SDL: Required for ffplay compilation
 if [ ! -d ./SDL ]
 then
-    hg clone $sdl_hg -r $sdl_release
+    git clone $sdl_git
 fi
 pushd SDL
-hg update -r $sdl_release
-hg pull -u -r $sdl_release
+git fetch --tags
+git checkout $sdl_release -B release
 ./autogen.sh
 mkdir -p build
 cd build
@@ -326,7 +326,7 @@ fi
 pushd fontconfig
 git fetch --tags
 git checkout $fontconfig_release -B release
-CLAGS="-I$include_path" LDFLAGS="-L$library_path" LIBS="-lbz2" ./autogen.sh $configure_params --enable-libxml2
+CFLAGS="-I$include_path" LDFLAGS="-L$library_path" LIBS="-lbz2" ./autogen.sh $configure_params --enable-libxml2
 make -j $threads
 make install
 popd
@@ -344,7 +344,6 @@ git checkout $libass_release -B release
 make -j $threads
 make install
 popd
-
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
