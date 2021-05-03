@@ -3,7 +3,7 @@ set -x
 
 #This script will install dependencies needed for building ffmpeg. You likely need to run it with sudo.
 
-apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 yasm make automake autoconf git pkg-config libtool nasm mercurial cmake python3 python3-pip python3-setuptools python3-wheel gperf gettext autopoint byacc flex 
+apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 yasm make automake autoconf git pkg-config libtool nasm mercurial cmake python3 python3-pip python3-setuptools python3-wheel gperf gettext autopoint byacc flex ragel
 pip3 install docwriter
 
 #Install c2man: Needed for libfribidi and not available via apt

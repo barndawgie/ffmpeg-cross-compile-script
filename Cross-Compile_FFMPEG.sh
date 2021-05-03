@@ -11,10 +11,13 @@ config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
-threads=2
+threads=3
 configure_params="--host=$host --prefix=$prefix --enable-static --disable-shared"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
+export CFLAGS="-I$include_path"
+export CPPFLAGS="-I$include_path"
+export LDFLAGS="-L$library_path"
 
 #Select Package Versions
 zlib_git="https://github.com/madler/zlib.git"
@@ -33,9 +36,15 @@ libxml2_release="v2.9.10"
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-10-4"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.9"
+fribidi_release="v1.0.9" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.13.93"
+pixman_git="https://gitlab.freedesktop.org/pixman/pixman"
+pixman_release="pixman-0.40.0"
+cairo_git="https://gitlab.freedesktop.org/cairo/cairo"
+cairo_release="1.17.4"
+harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
+harfbuzz_release="2.8.0"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 lame_download="https://managedway.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
@@ -303,6 +312,7 @@ git checkout $libfreetype2_release -B release
 BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
 make -j $threads
 make install
+patch -u $PKG_CONFIG_PATH/freetype2.pc -i $patch_dir/freetype2.pc.patch #Patch Freetype pkg-config to include bzip2
 popd
 
 #libfribidi: Required for Drawtext
@@ -326,7 +336,46 @@ fi
 pushd fontconfig
 git fetch --tags
 git checkout $fontconfig_release -B release
-CFLAGS="-I$include_path" LDFLAGS="-L$library_path" LIBS="-lbz2" ./autogen.sh $configure_params --enable-libxml2
+./autogen.sh $configure_params --enable-libxml2
+make -j $threads
+make install
+popd
+
+#Pixman: Required for Cairo
+if [ ! -d ./pixman ]
+then
+    git clone $pixman_git
+fi
+pushd pixman
+git fetch --tags
+git checkout $pixman_release -B release
+./autogen.sh $configure_params
+make -j $threads
+make install
+popd
+
+#Cairo: Required for Harfbuzz
+if [ ! -d ./cairo ]
+then
+    git clone $cairo_git
+fi
+pushd cairo
+git fetch --tags
+git checkout $cairo_release -B release
+./autogen.sh $configure_params  --enable-xlib=no --enable-xcb=no --enable-win32=yes
+make -j $threads
+make install
+popd
+
+#Harfbuzz: Optional for libass
+if [ ! -d ./harfbuzz ]
+then
+    git clone $harfbuzz_git
+fi
+pushd harfbuzz
+git fetch --tags
+git checkout $harfbuzz_release -B release
+LIBS="-lpthread" ./autogen.sh $configure_params
 make -j $threads
 make install
 popd
@@ -340,7 +389,7 @@ pushd libass
 git fetch --tags
 git checkout $libass_release -B release
 ./autogen.sh
-./configure $configure_params  --disable-harfbuzz
+./configure $configure_params
 make -j $threads
 make install
 popd
