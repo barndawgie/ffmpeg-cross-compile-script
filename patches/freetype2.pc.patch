@@ -1,0 +1,10 @@
+--- freetype2.pc.bak	2021-04-30 16:25:03.709736200 -0700
++++ freetype2.pc	2021-04-30 17:04:06.323706200 -0700
+@@ -9,6 +9,6 @@
+ Version: 23.4.17
+ Requires:
+ Requires.private: zlib, libpng
+-Libs: -L${libdir} -lfreetype
++Libs: -L${libdir} -lfreetype -lbz2
+ Libs.private: -L/home/barndawgie/dev/ffmpeg-cross-compile-script/ffmpeg_install/lib
+ Cflags: -I${includedir}/freetype2
