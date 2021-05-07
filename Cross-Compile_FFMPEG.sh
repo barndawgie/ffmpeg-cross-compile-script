@@ -418,6 +418,10 @@ git checkout $ffmpeg_release -B release
     $FFMPEG_OPTIONS
 make -j $threads
 make install
+#Make and install tools
+make -j $threads alltools
+mkdir -p $binary_path/tools/
+cp ./tools/*.exe $binary_path/tools/
 popd
 
 popd #Back to upper-level directory
