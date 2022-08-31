@@ -5,6 +5,7 @@ set -x
 
 #Configure Global Variables
 host="x86_64-w64-mingw32"
+build="x86_64-linux-gnu"
 prefix="$(pwd)/ffmpeg_install"
 patch_dir="$(pwd)/patches"
 config_dir="$(pwd)/config"
@@ -12,7 +13,7 @@ library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
 threads=3
-configure_params="--host=$host --prefix=$prefix --enable-static --disable-shared"
+configure_params="--host=$host --build=$build --prefix=$prefix --enable-static --disable-shared"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 export CFLAGS="-I$include_path"
@@ -21,24 +22,38 @@ export LDFLAGS="-L$library_path"
 
 #Select Package Versions
 zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.2.11"
-bzip2_git="https://git.code.sf.net/p/bzip2/bzip2.git"
-bzip2_release="bzip2-1_0_8"
+zlib_release="v1.2.12"
+bzip2_git="git://sourceware.org/git/bzip2.git"
+bzip2_release="bzip2-1_10"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.0.14"
+sdl_release="release-2.24.0"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.37"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.9.10"
+libxml2_release="v2.10.2"
+
+lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
+fdk_git="https://github.com/mstorsjo/fdk-aac.git"
+fdk_release="v2.0.2"
+
+x264_git="https://code.videolan.org/videolan/x264.git"
+x265_hg="http://hg.videolan.org/x265"
+libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
+libopenjpeg_release="v2.5.0"
+libaom_git="https://aomedia.googlesource.com/aom"
+libaom_version="v3.4.0"
+
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
-libfreetype2_release="VER-2-10-4"
+libfreetype2_release="VER-2-12-1"
 fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.9" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
+
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.13.93"
+fontconfig_release="2.13.96"
+
 pixman_git="https://gitlab.freedesktop.org/pixman/pixman"
 pixman_release="pixman-0.40.0"
 cairo_git="https://gitlab.freedesktop.org/cairo/cairo"
@@ -47,15 +62,8 @@ harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
 harfbuzz_release="2.8.0"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
-lame_download="https://managedway.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
-fdk_git="https://github.com/mstorsjo/fdk-aac.git"
-fdk_release="v2.0.2"
-x264_git="https://code.videolan.org/videolan/x264.git"
-x265_hg="http://hg.videolan.org/x265"
-libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
-libopenjpeg_release="v2.4.0"
-libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.0.0"
+
+
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n4.4"
 
@@ -80,121 +88,124 @@ mkdir -p packages
 pushd packages #Put all these dependencies somewhere
 
 #Build and Install Dependences
+
 #Libs
-#ZLIB: Required for FreeTyep2
-if [ ! -d ./zlib ]
-then
-    git clone $zlib_git
-fi
-pushd zlib
-git fetch --tags
-git checkout $zlib_release -B release
-sed -i /"PREFIX ="/d win32/Makefile.gcc
-./configure -static --prefix=$host-
-BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
-BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
-popd
+    #ZLIB: Required for FreeTyep2
+    if [ ! -d ./zlib ]
+    then
+        git clone $zlib_git
+    fi
+    pushd zlib
+    git fetch --tags
+    git checkout $zlib_release -B release
+    sed -i /"PREFIX ="/d win32/Makefile.gcc
+    ./configure -static --prefix=$host-
+    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
+    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
+    popd
 
-#libbz2
-if [ ! -d ./bzip2 ]
-then
-    git clone $bzip2_git
-fi
-pushd bzip2
-git fetch --tags
-git checkout $bzip2_release -B release
-patch -p0 < $bzip_patchfile_path
-CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
-install -m644 bzlib.h $include_path/bzlib.h
-install -m644 libbz2.a $library_path/libbz2.a
-popd
+    #libbz2
+    if [ ! -d ./bzip2 ]
+    then
+        git clone $bzip2_git
+    fi
+    pushd bzip2
+    git fetch --tags
+    git checkout $bzip2_release -B release
+    patch -p0 < $bzip_patchfile_path
+    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
+    install -m644 bzlib.h $include_path/bzlib.h
+    install -m644 libbz2.a $library_path/libbz2.a
+    popd
 
-#SDL: Required for ffplay compilation
-if [ ! -d ./SDL ]
-then
-    git clone $sdl_git
-fi
-pushd SDL
-git fetch --tags
-git checkout $sdl_release -B release
-./autogen.sh
-mkdir -p build
-cd build
-../configure $configure_params
-make -j $threads
-make install
-popd
+    #SDL: Required for ffplay compilation
+    if [ ! -d ./SDL ]
+    then
+        git clone $sdl_git
+    fi
+    pushd SDL
+    git fetch --tags
+    git checkout $sdl_release -B release
+    ./autogen.sh
+    mkdir -p build
+    cd build
+    ../configure $configure_params
+    make install
+    popd
 
-#openssl
-if [ ! -d ./openssl ]
-then
-    git clone $openssl_git
-fi
-pushd openssl
-git fetch --tags
-git checkout $openssl_release
-./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
-CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
-make -j $threads
-make install_sw
-popd
+    #openssl
+    if [ ! -d ./openssl ]
+    then
+        git clone $openssl_git
+    fi
+    pushd openssl
+    git fetch --tags
+    git checkout $openssl_release
+    ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
+    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
+    make -j $threads
+    make install_sw
+    popd
 
-#libpng: Required for FreeType2
-if [ ! -d ./libpng ]
-then
-    git clone $libpng_git
-fi
-pushd libpng
-git fetch --tags
-git checkout $libpng_release -B release
-LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
-make -j $threads
-make install
-popd
+    #libpng: Required for FreeType2
+    if [ ! -d ./libpng ]
+    then
+        git clone $libpng_git
+    fi
+    pushd libpng
+    git fetch --tags
+    git checkout $libpng_release -B release
+    LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
 
-#Libxml2
-if [ ! -d ./libxml2 ]
-then
-    git clone $libxml2_git
-fi
-pushd libxml2
-git fetch --tags
-git checkout $libxml2_release -B release
-./autogen.sh $configure_params --without-python
-make -j $threads
-make install
-popd
+    make -j $threads
+    make install
+    popd
+
+    #Libxml2
+    if [ ! -d ./libxml2 ]
+    then
+        git clone $libxml2_git
+    fi
+    pushd libxml2
+    git fetch --tags
+    git checkout $libxml2_release -B release
+    ./autogen.sh $configure_params --without-python
+    make -j $threads
+    make install
+    popd
 
 #Audio Codecs
-#lameMP3
-if [ ! -d ./lame-3 ]
-then
-    mkdir -p lame
-    curl $lame_download -o lame.tar.gz
-    tar -xvzf lame.tar.gz --directory lame --strip-components=1
-    rm lame.tar.gz
-fi
-pushd lame
-./configure $configure_params --disable-gtktest --enable-nasm
-make -j $threads
-make install
-popd
 
-#FDK: The Best AAC Codec for ffmpeg
-if [ ! -d ./fdk-aac ]
-then
-    git clone $fdk_git
-fi
-pushd fdk-aac
-git fetch --tags
-git checkout $fdk_release -B release
-./autogen.sh
-./configure $configure_params
-make -j $threads
-make install
-popd
+    #lameMP3
+    if [ ! -d ./lame-3 ]
+    then
+        mkdir -p lame
+        curl $lame_download -o lame.tar.gz
+        tar -xvzf lame.tar.gz --directory lame --strip-components=1
+        rm lame.tar.gz
+    fi
+    pushd lame
+    ./configure $configure_params --disable-gtktest --enable-nasm
+    make -j $threads
+    make install
+    popd
+
+    #FDK: The Best AAC Codec for ffmpeg
+    if [ ! -d ./fdk-aac ]
+    then
+        git clone $fdk_git
+    fi
+    pushd fdk-aac
+    git fetch --tags
+    git checkout $fdk_release -B release
+    ./autogen.sh
+    ./configure $configure_params
+    make -j $threads
+    make install
+    popd
 
 #Video Codecs
+
 #x264: h.264 Video Encoding for ffmpeg
 if [ ! -d ./x264 ]
 then
@@ -309,7 +320,7 @@ pushd freetype2
 git fetch --tags
 git checkout $libfreetype2_release -B release
 ./autogen.sh
-BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes
+BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes --with-brotli=no
 make -j $threads
 make install
 patch -u $PKG_CONFIG_PATH/freetype2.pc -i $patch_dir/freetype2.pc.patch #Patch Freetype pkg-config to include bzip2
