@@ -22,18 +22,18 @@ export LDFLAGS="-L$library_path"
 
 #Select Package Versions
 zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.2.12"
+zlib_release="v1.2.13"
 bzip2_git="git://sourceware.org/git/bzip2.git"
-bzip2_release="bzip2-1_10"
+bzip2_release="bzip2-1.0.8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.24.0"
+sdl_release="release-2.26.5"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
-libpng_release="v1.6.37"
+libpng_release="v1.6.39"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.10.2"
+libxml2_release="v2.10.3"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
@@ -44,7 +44,7 @@ x265_hg="http://hg.videolan.org/x265"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.0"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.4.0"
+libaom_version="v3.6.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-12-1"
@@ -65,7 +65,7 @@ libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n4.4"
+ffmpeg_release="n6.0"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
