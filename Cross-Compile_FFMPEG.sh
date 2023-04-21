@@ -82,10 +82,11 @@ FFMPEG_OPTIONS="\
     --enable-openssl \
     --enable-libfreetype \
     --enable-libfribidi \
-    --enable-libass"
-    #--enable-libfontconfig
+    --enable-libass \
+    --enable-libfontconfig"
     #--enable-libzimg Might be nice to add
     #--enable-avisynth Might be interesting at some point
+    #--enable-srt?
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -362,60 +363,18 @@ pushd subs
     make install
     popd
 
-    # #Fontconfig: Required? for Drawtext Filter
-    # if [ ! -d ./fontconfig ]
-    # then
-    #     git clone $fontconfig_git
-    # fi
-    # pushd fontconfig
-    # git fetch --tags
-    # git checkout $fontconfig_release -B release
-    # ./autogen.sh $configure_params --enable-libxml2
-    # make -j $threads
-    # make install
-    # popd
-
-    # #Pixman: Required for Cairo
-    # if [ ! -d ./pixman ]
-    # then
-    #     git clone $pixman_git
-    # fi
-    # pushd pixman
-    # git fetch --tags
-    # git checkout $pixman_release -B release
-    # ./autogen.sh $configure_params
-    # make -j $threads
-    # make install
-    # popd
-
-    # #Cairo: Required for Harfbuzz
-    # if [ ! -d ./cairo ]
-    # then
-    #     git clone $cairo_git
-    # fi
-    # pushd cairo
-    # git fetch --tags
-    # git checkout $cairo_release -B release
-
-    # #NOT WORKING YET AFTER UPGRADE TO MESON BUILDS
-    # mkdir -p build
-    # meson setup --prefix=$prefix --cross-file="$config_dir/meson-cross-file" ./build #Requires adding libxml reference to fontconfig pkg-config?
-    # ninja -C ./build
-
-    # popd
-
-    # #Harfbuzz: Optional for libass
-    # if [ ! -d ./harfbuzz ]
-    # then
-    #     git clone $harfbuzz_git
-    # fi
-    # pushd harfbuzz
-    # git fetch --tags
-    # git checkout $harfbuzz_release -B release
-    # LIBS="-lpthread" ./autogen.sh $configure_params
-    # make -j $threads
-    # make install
-    # popd
+    #Fontconfig: Required? for Drawtext Filter
+    if [ ! -d ./fontconfig ]
+    then
+        git clone $fontconfig_git
+    fi
+    pushd fontconfig
+    git fetch --tags
+    git checkout $fontconfig_release -B release
+    ./autogen.sh $configure_params --enable-libxml2
+    make -j $threads
+    make install
+    popd
 
     #libass
     if [ ! -d ./libass ]
