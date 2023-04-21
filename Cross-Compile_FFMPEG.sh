@@ -55,12 +55,9 @@ fribidi_release="v1.0.12" #Upgrade to v1.0.10 causes fribidi to not be found by 
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.14.2"
 
-pixman_git="https://gitlab.freedesktop.org/pixman/pixman"
-pixman_release="pixman-0.42.4"
-cairo_git="https://gitlab.freedesktop.org/cairo/cairo"
-cairo_release="1.17.8"
+
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="2.8.0"
+harfbuzz_release="7.1.0"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 
@@ -363,7 +360,7 @@ pushd subs
     make install
     popd
 
-    #Fontconfig: Required? for Drawtext Filter
+    #Fontconfig: Improves Drawtext Filter, HarfBuzz
     if [ ! -d ./fontconfig ]
     then
         git clone $fontconfig_git
@@ -372,6 +369,19 @@ pushd subs
     git fetch --tags
     git checkout $fontconfig_release -B release
     ./autogen.sh $configure_params --enable-libxml2
+    make -j $threads
+    make install
+    popd
+
+    #Harfbuzz: Optional for libass
+    if [ ! -d ./harfbuzz ]
+    then
+        git clone $harfbuzz_git
+    fi
+    pushd harfbuzz
+    git fetch --tags
+    git checkout $harfbuzz_release -B release
+    ./autogen.sh $configure_params
     make -j $threads
     make install
     popd
