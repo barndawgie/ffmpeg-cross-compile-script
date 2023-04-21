@@ -21,11 +21,12 @@ export CPPFLAGS="-I$include_path"
 export LDFLAGS="-L$library_path"
 
 #Select Package Versions
-zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.2.13"
 bzip2_git="git://sourceware.org/git/bzip2.git"
 bzip2_release="bzip2-1.0.8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
+bzip_pc_file_path="$patch_dir/bzip2.pc"
+zlib_git="https://github.com/madler/zlib.git"
+zlib_release="v1.2.13"
 sdl_git="https://github.com/libsdl-org/SDL.git"
 sdl_release="release-2.26.5"
 openssl_git="https://github.com/openssl/openssl.git"
@@ -47,17 +48,17 @@ libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.6.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
-libfreetype2_release="VER-2-12-1"
+libfreetype2_release="VER-2-13-0"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.9" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
+fribidi_release="v1.0.12" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
 
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.13.96"
+fontconfig_release="2.14.2"
 
 pixman_git="https://gitlab.freedesktop.org/pixman/pixman"
-pixman_release="pixman-0.40.0"
+pixman_release="pixman-0.42.4"
 cairo_git="https://gitlab.freedesktop.org/cairo/cairo"
-cairo_release="1.17.4"
+cairo_release="1.17.8"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
 harfbuzz_release="2.8.0"
 libass_git="https://github.com/libass/libass.git"
@@ -79,10 +80,16 @@ FFMPEG_OPTIONS="\
     --enable-libaom \
     --enable-libmp3lame \
     --enable-openssl \
-    --enable-libfreetype
-    --enable-libfontconfig \
+    --enable-libfreetype \
     --enable-libfribidi \
     --enable-libass"
+    #--enable-libfontconfig
+    #--enable-libzimg Might be nice to add
+    #--enable-avisynth Might be interesting at some point
+
+mkdir -p $include_path
+mkdir -p $library_path
+mkdir -p $PKG_CONFIG_PATH
 
 mkdir -p packages
 pushd packages #Put all these dependencies somewhere
@@ -90,19 +97,8 @@ pushd packages #Put all these dependencies somewhere
 #Build and Install Dependences
 
 #Libs
-    #ZLIB: Required for FreeTyep2
-    if [ ! -d ./zlib ]
-    then
-        git clone $zlib_git
-    fi
-    pushd zlib
-    git fetch --tags
-    git checkout $zlib_release -B release
-    sed -i /"PREFIX ="/d win32/Makefile.gcc
-    ./configure -static --prefix=$host-
-    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
-    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
-    popd
+mkdir -p libs
+pushd libs
 
     #libbz2
     if [ ! -d ./bzip2 ]
@@ -116,6 +112,21 @@ pushd packages #Put all these dependencies somewhere
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
     install -m644 bzlib.h $include_path/bzlib.h
     install -m644 libbz2.a $library_path/libbz2.a
+    install -m644 $bzip_pc_file_path $PKG_CONFIG_PATH
+    popd
+
+    #ZLIB: Required for FreeTyep2
+    if [ ! -d ./zlib ]
+    then
+        git clone $zlib_git
+    fi
+    pushd zlib
+    git fetch --tags
+    git checkout $zlib_release -B release
+    sed -i /"PREFIX ="/d win32/Makefile.gcc
+    ./configure -static --prefix=$host-
+    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
+    BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
     popd
 
     #SDL: Required for ffplay compilation
@@ -174,7 +185,11 @@ pushd packages #Put all these dependencies somewhere
     make install
     popd
 
+popd #leave libs directory
+
 #Audio Codecs
+mkdir -p audio
+pushd audio
 
     #lameMP3
     if [ ! -d ./lame-3 ]
@@ -204,7 +219,11 @@ pushd packages #Put all these dependencies somewhere
     make install
     popd
 
+popd #leave audio directory
+
 #Video Codecs
+mkdir -p video
+pushd video
 
 #x264: h.264 Video Encoding for ffmpeg
 if [ ! -d ./x264 ]
@@ -310,100 +329,109 @@ make -j $threads
 make install
 popd
 
+popd #leave video directory
+
 # #Subtitle/Font Dependencies
-#Libfreetype2: Required for Drawtext Filter
-if [ ! -d ./freetype2 ]
-then
-    git clone $libfreetype2_git freetype2
-fi
-pushd freetype2
-git fetch --tags
-git checkout $libfreetype2_release -B release
-./autogen.sh
-BZIP2_LIBS="-L$library_path" BZIP2_CFLAGS="-I$include_path" ./configure $configure_params --with-zlib=yes --with-png=yes --with-harfbuzz=no --with-bzip2=yes --with-brotli=no
-make -j $threads
-make install
-patch -u $PKG_CONFIG_PATH/freetype2.pc -i $patch_dir/freetype2.pc.patch #Patch Freetype pkg-config to include bzip2
-popd
+mkdir -p subs
+pushd subs
 
-#libfribidi: Required for Drawtext
-if [ ! -d ./fribidi ]
-then
-    git clone $fribidi_git
-fi
-pushd fribidi
-git fetch --tags
-git checkout $fribidi_release -B release
-./autogen.sh $configure_params
-make -j $threads
-make install
-popd
+    #Libfreetype2: Required for Drawtext Filter
+    if [ ! -d ./freetype2 ]
+    then
+        git clone $libfreetype2_git freetype2
+    fi
+    pushd freetype2
+    git fetch --tags
+    git checkout $libfreetype2_release -B release
+    ./autogen.sh
+    ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
+    make -j $threads
+    make install
+    popd
 
-#Fontconfig: Required? for Drawtext Filter
-if [ ! -d ./fontconfig ]
-then
-    git clone $fontconfig_git
-fi
-pushd fontconfig
-git fetch --tags
-git checkout $fontconfig_release -B release
-./autogen.sh $configure_params --enable-libxml2
-make -j $threads
-make install
-popd
+    #libfribidi: Required for Libass
+    if [ ! -d ./fribidi ]
+    then
+        git clone $fribidi_git
+    fi
+    pushd fribidi
+    git fetch --tags
+    git checkout $fribidi_release -B release
+    ./autogen.sh $configure_params
+    make -j $threads
+    make install
+    popd
 
-#Pixman: Required for Cairo
-if [ ! -d ./pixman ]
-then
-    git clone $pixman_git
-fi
-pushd pixman
-git fetch --tags
-git checkout $pixman_release -B release
-./autogen.sh $configure_params
-make -j $threads
-make install
-popd
+    # #Fontconfig: Required? for Drawtext Filter
+    # if [ ! -d ./fontconfig ]
+    # then
+    #     git clone $fontconfig_git
+    # fi
+    # pushd fontconfig
+    # git fetch --tags
+    # git checkout $fontconfig_release -B release
+    # ./autogen.sh $configure_params --enable-libxml2
+    # make -j $threads
+    # make install
+    # popd
 
-#Cairo: Required for Harfbuzz
-if [ ! -d ./cairo ]
-then
-    git clone $cairo_git
-fi
-pushd cairo
-git fetch --tags
-git checkout $cairo_release -B release
-./autogen.sh $configure_params  --enable-xlib=no --enable-xcb=no --enable-win32=yes
-make -j $threads
-make install
-popd
+    # #Pixman: Required for Cairo
+    # if [ ! -d ./pixman ]
+    # then
+    #     git clone $pixman_git
+    # fi
+    # pushd pixman
+    # git fetch --tags
+    # git checkout $pixman_release -B release
+    # ./autogen.sh $configure_params
+    # make -j $threads
+    # make install
+    # popd
 
-#Harfbuzz: Optional for libass
-if [ ! -d ./harfbuzz ]
-then
-    git clone $harfbuzz_git
-fi
-pushd harfbuzz
-git fetch --tags
-git checkout $harfbuzz_release -B release
-LIBS="-lpthread" ./autogen.sh $configure_params
-make -j $threads
-make install
-popd
+    # #Cairo: Required for Harfbuzz
+    # if [ ! -d ./cairo ]
+    # then
+    #     git clone $cairo_git
+    # fi
+    # pushd cairo
+    # git fetch --tags
+    # git checkout $cairo_release -B release
 
-#libass
-if [ ! -d ./libass ]
-then
-    git clone $libass_git
-fi
-pushd libass
-git fetch --tags
-git checkout $libass_release -B release
-./autogen.sh
-./configure $configure_params
-make -j $threads
-make install
-popd
+    # #NOT WORKING YET AFTER UPGRADE TO MESON BUILDS
+    # mkdir -p build
+    # meson setup --prefix=$prefix --cross-file="$config_dir/meson-cross-file" ./build #Requires adding libxml reference to fontconfig pkg-config?
+    # ninja -C ./build
+
+    # popd
+
+    # #Harfbuzz: Optional for libass
+    # if [ ! -d ./harfbuzz ]
+    # then
+    #     git clone $harfbuzz_git
+    # fi
+    # pushd harfbuzz
+    # git fetch --tags
+    # git checkout $harfbuzz_release -B release
+    # LIBS="-lpthread" ./autogen.sh $configure_params
+    # make -j $threads
+    # make install
+    # popd
+
+    #libass
+    if [ ! -d ./libass ]
+    then
+        git clone $libass_git
+    fi
+    pushd libass
+    git fetch --tags
+    git checkout $libass_release -B release
+    ./autogen.sh
+    ./configure $configure_params
+    make -j $threads
+    make install
+    popd
+
+popd #Leave subs directory
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
