@@ -10,7 +10,7 @@ This (non-free) build includes stable releases of:
 * aom (AV1 codec)
 * openjpeg
 * SDL v2.0.12 (to enable building of ffplay)
-* libfreetype, libfontconfig, and libfribidi (for Drawtext support)
+* libfreetype, harfguzz, libfontconfig, and libfribidi (for Drawtext support)
 * libass
 * openssl 1.1.1
 * libxml2
