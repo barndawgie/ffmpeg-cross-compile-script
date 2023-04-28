@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-#Install ubuntu package dependencies before executing this script by running ./Prep_System.sh
+#Install ubuntu package dependencies before executing this script by running 'sudo ./Prep_System.sh'
 
 #Configure Global Variables
 host="x86_64-w64-mingw32"
@@ -42,6 +42,7 @@ fdk_release="v2.0.2"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x265_hg="http://hg.videolan.org/x265"
+x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.0"
 libaom_git="https://aomedia.googlesource.com/aom"
@@ -49,18 +50,14 @@ libaom_version="v3.6.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-0"
-fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.12" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
-
-fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.14.2"
-
-
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
 harfbuzz_release="7.1.0"
+fribidi_git="https://github.com/fribidi/fribidi.git"
+fribidi_release="v1.0.12" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
+fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
+fontconfig_release="2.14.2"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
-
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n6.0"
@@ -81,9 +78,6 @@ FFMPEG_OPTIONS="\
     --enable-libfribidi \
     --enable-libass \
     --enable-libfontconfig"
-    #--enable-libzimg Might be nice to add
-    #--enable-avisynth Might be interesting at some point
-    #--enable-srt?
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -223,109 +217,102 @@ popd #leave audio directory
 mkdir -p video
 pushd video
 
-#x264: h.264 Video Encoding for ffmpeg
-if [ ! -d ./x264 ]
-then
-    git clone $x264_git
-fi
-pushd x264
-git fetch --tags
-git checkout stable
-./configure --host=$host --enable-static --cross-prefix=$host- --prefix=$prefix
-make -j $threads
-make install
-popd
+    #x264: h.264 Video Encoding for ffmpeg
+    if [ ! -d ./x264 ]
+    then
+        git clone $x264_git
+    fi
+    pushd x264
+    git fetch --tags
+    git checkout stable
+    ./configure --host=$host --enable-static --cross-prefix=$host- --prefix=$prefix
+    make -j $threads
+    make install
+    popd
 
-#x265: HEVC Video Encoding for ffmpeg
-if [ ! -d ./x265 ]
-then
-    hg clone $x265_hg -r stable
-fi
-pushd x265
-hg update -r stable
-hg pull -u -r stable
-cd ./build
+    #x265: HEVC Video Encoding for ffmpeg
+    if [ ! -d ./x265 ]
+    then
+        hg clone $x265_hg -r stable
+    fi
+    pushd x265
+    hg update -r stable
+    hg pull -u -r stable
+    cd ./build
 
-mkdir -p 8bit 10bit 12bit
+    mkdir -p 8bit 10bit 12bit
 
-#Build 12-Bit
-cd 12bit
-cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
-	-DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
-    -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
-    -DHIGH_BIT_DEPTH=ON -DMAIN12=ON \
-    ../../source
-make -j $threads
+    #Build 12-Bit
+    cd 12bit
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+    	-DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+        -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
+        -DHIGH_BIT_DEPTH=ON -DMAIN12=ON \
+        ../../source
+    make -j $threads
 
-#Build 10-Bit
-cd  ../10bit
-cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
-    -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
-    -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
-    -DHIGH_BIT_DEPTH=ON -DMAIN12=OFF \
-    ../../source
-make -j $threads
+    #Build 10-Bit
+    cd  ../10bit
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+        -DENABLE_CLI=OFF -DEXPORT_C_API=OFF \
+        -DHIGH_BIT_DEPTH=ON -DMAIN12=OFF \
+        ../../source
+    make -j $threads
 
-#Build 8-Bit
-cd ../8bit
-ln -sf ../10bit/libx265.a libx265_main10.a
-ln -sf ../12bit/libx265.a libx265_main12.a
-cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
-    -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
-    -DENABLE_CLI=OFF -DEXPORT_C_API=ON \
-    -DEXTRA_LIB="x265_main10.a;x265_main12.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON \
-    ../../source
-make -j $threads
+    #Build 8-Bit
+    cd ../8bit
+    ln -sf ../10bit/libx265.a libx265_main10.a
+    ln -sf ../12bit/libx265.a libx265_main12.a
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix -DENABLE_SHARED=OFF \
+        -DENABLE_CLI=OFF -DEXPORT_C_API=ON \
+        -DEXTRA_LIB="x265_main10.a;x265_main12.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON \
+        ../../source
+    make -j $threads
 
-#Combine all Libraries
-mv libx265.a libx265_main.a
-ar -M <<EOF
-CREATE libx265.a
-ADDLIB libx265_main.a
-ADDLIB libx265_main10.a
-ADDLIB libx265_main12.a
-SAVE
-END
-EOF
-make install
-popd
+    #Combine all Libraries
+    mv libx265.a libx265_main.a
+    ar -M <$x265_mri_path
+    make install
+    popd
 
-#openjpeg: JPEG 2000 Codec
-if [ ! -d ./openjpeg ]
-then
-    git clone $libopenjpeg_git
-fi
-pushd openjpeg
-git fetch --tags
-git checkout $libopenjpeg_release -B release
-mkdir build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
-	-DCMAKE_INSTALL_PREFIX=$prefix \
-	-DBUILD_THIRDPARTY=TRUE -DBUILD_SHARED_LIBS=0 \
-    ..
-make -j $threads
-make install
-popd
+    #openjpeg: JPEG 2000 Codec
+    if [ ! -d ./openjpeg ]
+    then
+        git clone $libopenjpeg_git
+    fi
+    pushd openjpeg
+    git fetch --tags
+    git checkout $libopenjpeg_release -B release
+    mkdir build
+    cd build
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+    	-DCMAKE_INSTALL_PREFIX=$prefix \
+    	-DBUILD_THIRDPARTY=TRUE -DBUILD_SHARED_LIBS=0 \
+        ..
+    make -j $threads
+    make install
+    popd
 
-#libaom: AV1 Codec
-if [ ! -d ./aom ]
-then
-    git clone $libaom_git aom
-fi
-pushd aom
-git fetch --tags
-git checkout $libaom_version -B release
-popd
+    #libaom: AV1 Codec
+    if [ ! -d ./aom ]
+    then
+        git clone $libaom_git aom
+    fi
+    pushd aom
+    git fetch --tags
+    git checkout $libaom_version -B release
+    popd
 
-mkdir -p aom_build
-pushd aom_build
-cmake -DCMAKE_TOOLCHAIN_FILE="../aom/build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
-    -DCMAKE_INSTALL_PREFIX=$prefix \
-    ../aom
-make -j $threads
-make install
-popd
+    mkdir -p aom_build
+    pushd aom_build
+    cmake -DCMAKE_TOOLCHAIN_FILE="../aom/build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix \
+        ../aom
+    make -j $threads
+    make install
+    popd
 
 popd #leave video directory
 
@@ -346,6 +333,26 @@ pushd subs
     make -j $threads
     make install
     popd
+
+    #Harfbuzz: Optional for libass
+    if [ ! -d ./harfbuzz ]
+    then
+        git clone $harfbuzz_git
+    fi
+    pushd harfbuzz
+    git fetch --tags
+    git checkout $harfbuzz_release -B release
+    ./autogen.sh $configure_params
+    make -j $threads
+    make install
+    popd
+
+    # #Rebuild Freetype2 with HarfBuzz - This seems to work but then seems to break Fontconfig build?
+    # pushd freetype2
+    # ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=yes --with-harfbuzz=yes
+    # make -j $threads
+    # make install
+    # popd
 
     #libfribidi: Required for Libass
     if [ ! -d ./fribidi ]
@@ -369,19 +376,6 @@ pushd subs
     git fetch --tags
     git checkout $fontconfig_release -B release
     ./autogen.sh $configure_params --enable-libxml2
-    make -j $threads
-    make install
-    popd
-
-    #Harfbuzz: Optional for libass
-    if [ ! -d ./harfbuzz ]
-    then
-        git clone $harfbuzz_git
-    fi
-    pushd harfbuzz
-    git fetch --tags
-    git checkout $harfbuzz_release -B release
-    ./autogen.sh $configure_params
     make -j $threads
     make install
     popd
