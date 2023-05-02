@@ -59,6 +59,10 @@ fontconfig_release="2.14.2"
 libass_git="https://github.com/libass/libass.git"
 libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 
+srt_git="https://github.com/Haivision/srt.git"
+srt_release="v1.5.1"
+rtmp_git="https://github.com/ossrs/librtmp.git"
+
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n6.0"
 
@@ -77,7 +81,9 @@ FFMPEG_OPTIONS="\
     --enable-libfreetype \
     --enable-libfribidi \
     --enable-libass \
-    --enable-libfontconfig"
+    --enable-libfontconfig \
+    --enable-libsrt \
+    --enable-librtmp"
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -395,6 +401,42 @@ pushd subs
     popd
 
 popd #Leave subs directory
+
+mkdir -p protocols
+pushd protocols
+
+    #SRT
+    if [ ! -d ./srt ]
+    then
+        git clone $srt_git
+    fi
+    pushd srt
+    git fetch --tags
+    git checkout $srt_release -B release
+    mkdir -p out
+    cd out
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix \
+        -DENABLE_SHARED=0 \
+        -DENABLE_STATIC=1 \
+        -DENABLE_DEBUG=0 \
+        -DENABLE_APPS=0 \
+        ..
+    make -j $threads
+    make install
+    popd
+
+    #librtmp
+    if [ ! -d ./librtmp ]
+    then
+        git clone $rtmp_git
+    fi
+    pushd librtmp
+    make SYS=mingw SHARED=false CROSS_COMPILE="$host-" prefix=$prefix CRYPTO=
+    make install SYS=mingw SHARED=false CROSS_COMPILE="$host-" prefix=$prefix CRYPTO=
+    popd
+
+popd
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
 if [ ! -d ./ffmpeg ]
