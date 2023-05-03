@@ -47,6 +47,8 @@ libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.0"
 libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.6.0"
+ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
+ffnvcodec_release="n12.0.16.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-0"
@@ -75,6 +77,8 @@ FFMPEG_OPTIONS="\
     --enable-libxml2 \
     --enable-libopenjpeg \
     --enable-libaom \
+    --enable-nvdec \
+    --enable-nvenc \
     --enable-libmp3lame \
     --enable-openssl \
     --enable-libfreetype \
@@ -316,6 +320,14 @@ pushd video
         ../aom
     make -j $threads
     make install
+    popd
+
+    if [ ! -d ./ffnvcodec ]
+    then
+        git clone $ffnvcodec_git ffnvcodec
+    fi
+    pushd ffnvcodec
+    make install PREFIX=$prefix
     popd
 
 popd #leave video directory
