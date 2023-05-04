@@ -51,6 +51,8 @@ libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.6.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.0.16.0"
+libmfx_git="https://github.com/lu-zero/mfx_dispatch.git"
+libmfx_release="master"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-0"
@@ -87,9 +89,10 @@ FFMPEG_OPTIONS="\
     --enable-libfribidi \
     --enable-libass \
     --enable-libfontconfig \
-    --enable-libsrt
-    --enable-libzimg"
-    # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
+    --enable-libsrt \
+    --enable-libzimg \
+    --enable-libmfx"
+    # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -340,12 +343,24 @@ pushd video
     make install
     popd
 
+    #NVEnc/NVDec
     if [ ! -d ./ffnvcodec ]
     then
         git clone $ffnvcodec_git ffnvcodec
     fi
     pushd ffnvcodec
     make install PREFIX=$prefix
+    popd
+
+     if [ ! -d ./libmfx ]
+    then
+        git clone $libmfx_git libmfx
+    fi
+    pushd libmfx
+    autoreconf -i
+    ./configure $configure_params
+    make -j $threads
+    make install
     popd
 
 popd #leave video directory
