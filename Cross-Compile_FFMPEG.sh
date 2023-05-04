@@ -12,7 +12,7 @@ config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
-threads=3
+threads=""
 configure_params="--host=$host --build=$build --prefix=$prefix --enable-static --disable-shared"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
@@ -35,6 +35,8 @@ libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.39"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.10.3"
+libzimg_git="https://github.com/sekrit-twc/zimg.git"
+libzimg_release="release-3.0.4"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
@@ -85,7 +87,9 @@ FFMPEG_OPTIONS="\
     --enable-libfribidi \
     --enable-libass \
     --enable-libfontconfig \
-    --enable-libsrt"
+    --enable-libsrt
+    --enable-libzimg"
+    # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -181,6 +185,20 @@ pushd libs
     git fetch --tags
     git checkout $libxml2_release -B release
     ./autogen.sh $configure_params --without-python
+    make -j $threads
+    make install
+    popd
+
+    #libzimg
+    if [ ! -d ./zimg ]
+    then
+        git clone $libzimg_git zimg
+    fi
+    pushd zimg
+    git fetch --tags
+    git checkout $libzimg_release -B release
+    ./autogen.sh
+    ./configure $configure_params
     make -j $threads
     make install
     popd
@@ -460,7 +478,7 @@ git checkout $ffmpeg_release -B release
     --extra-ldsoflags="$compiler_params" \
     --logfile=./config.log \
     $FFMPEG_OPTIONS
-make -j $threads
+make #Paralellel make seems to be failing since I enabled libsrt?
 make install
 #Make and install tools
 make -j $threads alltools
