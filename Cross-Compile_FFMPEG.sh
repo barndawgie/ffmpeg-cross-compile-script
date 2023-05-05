@@ -12,7 +12,7 @@ config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
-threads=""
+threads="1" #Seeing failures for some reason with parallel builds
 configure_params="--host=$host --build=$build --prefix=$prefix --enable-static --disable-shared"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
@@ -45,6 +45,7 @@ fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.2"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
+x264_release="stable"
 x265_hg="http://hg.videolan.org/x265"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
@@ -113,13 +114,8 @@ mkdir -p libs
 pushd libs
 
     #libbz2
-    if [ ! -d ./bzip2 ]
-    then
-        git clone $bzip2_git
-    fi
+    git clone -b $bzip2_release $bzip2_git bzip2
     pushd bzip2
-    git fetch --tags
-    git checkout $bzip2_release -B release
     patch -p0 < $bzip_patchfile_path
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
     install -m644 bzlib.h $include_path/bzlib.h
@@ -128,13 +124,8 @@ pushd libs
     popd
 
     #ZLIB: Required for FreeTyep2
-    if [ ! -d ./zlib ]
-    then
-        git clone $zlib_git
-    fi
+    git clone -b $zlib_release $zlib_git zlib
     pushd zlib
-    git fetch --tags
-    git checkout $zlib_release -B release
     sed -i /"PREFIX ="/d win32/Makefile.gcc
     ./configure -static --prefix=$host-
     BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
@@ -142,13 +133,8 @@ pushd libs
     popd
 
     #SDL: Required for ffplay compilation
-    if [ ! -d ./SDL ]
-    then
-        git clone $sdl_git
-    fi
+    git clone -b $sdl_release $sdl_git SDL
     pushd SDL
-    git fetch --tags
-    git checkout $sdl_release -B release
     ./autogen.sh
     mkdir -p build
     cd build
@@ -157,13 +143,8 @@ pushd libs
     popd
 
     #openssl
-    if [ ! -d ./openssl ]
-    then
-        git clone $openssl_git
-    fi
+    git clone -b $openssl_release $openssl_git openssl
     pushd openssl
-    git fetch --tags
-    git checkout $openssl_release
     ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
     make -j $threads
@@ -171,40 +152,24 @@ pushd libs
     popd
 
     #libpng: Required for FreeType2
-    if [ ! -d ./libpng ]
-    then
-        git clone $libpng_git
-    fi
+    git clone -b $libpng_release $libpng_git libpng
     pushd libpng
-    git fetch --tags
-    git checkout $libpng_release -B release
     LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
-
     make -j $threads
     make install
     popd
 
     #Libxml2
-    if [ ! -d ./libxml2 ]
-    then
-        git clone $libxml2_git
-    fi
+    git clone -b $libxml2_release $libxml2_git libxml2
     pushd libxml2
-    git fetch --tags
-    git checkout $libxml2_release -B release
     ./autogen.sh $configure_params --without-python
     make -j $threads
     make install
     popd
 
     #libzimg
-    if [ ! -d ./zimg ]
-    then
-        git clone $libzimg_git zimg
-    fi
+    git clone -b $libzimg_release $libzimg_git zimg
     pushd zimg
-    git fetch --tags
-    git checkout $libzimg_release -B release
     ./autogen.sh
     ./configure $configure_params
     make -j $threads
@@ -228,7 +193,7 @@ mkdir -p audio
 pushd audio
 
     #lameMP3
-    if [ ! -d ./lame-3 ]
+    if [ ! -d ./lame ]
     then
         mkdir -p lame
         curl $lame_download -o lame.tar.gz
@@ -242,13 +207,8 @@ pushd audio
     popd
 
     #FDK: The Best AAC Codec for ffmpeg
-    if [ ! -d ./fdk-aac ]
-    then
-        git clone $fdk_git
-    fi
+    git clone -b $fdk_release $fdk_git fdk-aac
     pushd fdk-aac
-    git fetch --tags
-    git checkout $fdk_release -B release
     ./autogen.sh
     ./configure $configure_params
     make -j $threads
@@ -262,23 +222,15 @@ mkdir -p video
 pushd video
 
     #x264: h.264 Video Encoding for ffmpeg
-    if [ ! -d ./x264 ]
-    then
-        git clone $x264_git
-    fi
+    git clone -b $x264_release $x264_git x264
     pushd x264
-    git fetch --tags
-    git checkout stable
     ./configure --host=$host --enable-static --cross-prefix=$host- --prefix=$prefix
     make -j $threads
     make install
     popd
 
     #x265: HEVC Video Encoding for ffmpeg
-    if [ ! -d ./x265 ]
-    then
-        hg clone $x265_hg -r stable
-    fi
+    hg clone $x265_hg -r stable
     pushd x265
     hg update -r stable
     hg pull -u -r stable
@@ -322,14 +274,9 @@ pushd video
     popd
 
     #openjpeg: JPEG 2000 Codec
-    if [ ! -d ./openjpeg ]
-    then
-        git clone $libopenjpeg_git
-    fi
+    git clone -b $libopenjpeg_release $libopenjpeg_git openjpeg
     pushd openjpeg
-    git fetch --tags
-    git checkout $libopenjpeg_release -B release
-    mkdir build
+    mkdir -p build
     cd build
     cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
     	-DCMAKE_INSTALL_PREFIX=$prefix \
@@ -340,37 +287,25 @@ pushd video
     popd
 
     #libaom: AV1 Codec
-    if [ ! -d ./aom ]
-    then
-        git clone $libaom_git aom
-    fi
+    git clone -b $libaom_version $libaom_git aom
     pushd aom
-    git fetch --tags
-    git checkout $libaom_version -B release
-    popd
-
-    mkdir -p aom_build
-    pushd aom_build
-    cmake -DCMAKE_TOOLCHAIN_FILE="../aom/build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
+    mkdir -p out
+    cd  out
+    cmake -DCMAKE_TOOLCHAIN_FILE="../build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
         -DCMAKE_INSTALL_PREFIX=$prefix \
-        ../aom
+        ..
     make -j $threads
     make install
     popd
 
     #NVEnc/NVDec
-    if [ ! -d ./ffnvcodec ]
-    then
-        git clone $ffnvcodec_git ffnvcodec
-    fi
+    git clone -b $ffnvcodec_release $ffnvcodec_git ffnvcodec
     pushd ffnvcodec
     make install PREFIX=$prefix
     popd
 
-     if [ ! -d ./libmfx ]
-    then
-        git clone $libmfx_git libmfx
-    fi
+    #libmfx
+    git clone -b $libmfx_release $libmfx_git libmfx
     pushd libmfx
     autoreconf -i
     ./configure $configure_params
@@ -385,13 +320,8 @@ mkdir -p subs
 pushd subs
 
     #Libfreetype2: Required for Drawtext Filter
-    if [ ! -d ./freetype2 ]
-    then
-        git clone $libfreetype2_git freetype2
-    fi
+    git clone -b $libfreetype2_release $libfreetype2_git freetype2
     pushd freetype2
-    git fetch --tags
-    git checkout $libfreetype2_release -B release
     ./autogen.sh
     ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
     make -j $threads
@@ -399,13 +329,8 @@ pushd subs
     popd
 
     #Harfbuzz: Optional for libass
-    if [ ! -d ./harfbuzz ]
-    then
-        git clone $harfbuzz_git
-    fi
+    git clone -b $harfbuzz_release $harfbuzz_git harfbuzz
     pushd harfbuzz
-    git fetch --tags
-    git checkout $harfbuzz_release -B release
     ./autogen.sh $configure_params
     make -j $threads
     make install
@@ -419,39 +344,24 @@ pushd subs
     # popd
 
     #libfribidi: Required for Libass
-    if [ ! -d ./fribidi ]
-    then
-        git clone $fribidi_git
-    fi
+    git clone -b $fribidi_release $fribidi_git fribidi
     pushd fribidi
-    git fetch --tags
-    git checkout $fribidi_release -B release
     ./autogen.sh $configure_params
     make -j $threads
     make install
     popd
 
     #Fontconfig: Improves Drawtext Filter, HarfBuzz
-    if [ ! -d ./fontconfig ]
-    then
-        git clone $fontconfig_git
-    fi
+    git clone -b $fontconfig_release $fontconfig_git fontconfig
     pushd fontconfig
-    git fetch --tags
-    git checkout $fontconfig_release -B release
     ./autogen.sh $configure_params --enable-libxml2
     make -j $threads
     make install
     popd
 
     #libass
-    if [ ! -d ./libass ]
-    then
-        git clone $libass_git
-    fi
+    git clone -b $libass_release $libass_git libass
     pushd libass
-    git fetch --tags
-    git checkout $libass_release -B release
     ./autogen.sh
     ./configure $configure_params
     make -j $threads
@@ -464,13 +374,8 @@ mkdir -p protocols
 pushd protocols
 
     #SRT
-    if [ ! -d ./srt ]
-    then
-        git clone $srt_git
-    fi
+    git clone -b $srt_release $srt_git srt
     pushd srt
-    git fetch --tags
-    git checkout $srt_release -B release
     mkdir -p out
     cd out
     cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
@@ -496,13 +401,8 @@ pushd protocols
 popd
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
-if [ ! -d ./ffmpeg ]
-then
-    git clone $ffmpeg_git
-fi
+git clone -b $ffmpeg_release $ffmpeg_git ffmpeg
 pushd ffmpeg
-git fetch --tags
-git checkout $ffmpeg_release -B release
 ./configure --arch=x86_64 \
     --target-os=mingw32 \
     --cross-prefix=$host- \
@@ -517,7 +417,7 @@ git checkout $ffmpeg_release -B release
     --extra-ldsoflags="$compiler_params" \
     --logfile=./config.log \
     $FFMPEG_OPTIONS
-make #Paralellel make seems to be failing since I enabled libsrt?
+make -j $threads
 make install
 #Make and install tools
 make -j $threads alltools
