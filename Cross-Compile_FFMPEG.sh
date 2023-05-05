@@ -37,6 +37,8 @@ libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
 libxml2_release="v2.10.3"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="release-3.0.4"
+libudfread_git="https://code.videolan.org/videolan/libudfread.git"
+libudfread_release="1.1.2"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
@@ -67,6 +69,8 @@ libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.1"
+libbluray_git="https://code.videolan.org/videolan/libbluray.git"
+libbluray_release="1.3.4"
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n6.0"
@@ -91,7 +95,8 @@ FFMPEG_OPTIONS="\
     --enable-libfontconfig \
     --enable-libsrt \
     --enable-libzimg \
-    --enable-libmfx"
+    --enable-libmfx \
+    --enable-libbluray"
     # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
 
 mkdir -p $include_path
@@ -205,6 +210,16 @@ pushd libs
     make -j $threads
     make install
     popd
+
+    #libudfread: Needed for libbluray
+    git clone -b $libudfread_release $libudfread_git libudfread
+    pushd libudfread
+    autoreconf -i
+    ./configure $configure_params
+    make -j $threads
+    make install
+    popd
+
 
 popd #leave libs directory
 
@@ -465,6 +480,15 @@ pushd protocols
         -DENABLE_DEBUG=0 \
         -DENABLE_APPS=0 \
         ..
+    make -j $threads
+    make install
+    popd
+
+    #libbluray
+    git clone -b $libbluray_release $libbluray_git libbluray
+    pushd libbluray
+    autoreconf -i
+    ./configure $configure_params  --disable-doxygen-doc --disable-bdjava-jar
     make -j $threads
     make install
     popd
