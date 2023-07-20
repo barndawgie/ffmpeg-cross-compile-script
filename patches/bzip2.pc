@@ -1,4 +1,4 @@
-prefix=/home/jbarnard/repos/ffmpeg-cross-compile-script/ffmpeg_install
+prefix=${prefix}
 exec_prefix=${prefix}/bin
 libdir=${prefix}/lib
 includedir=${prefix}/include
