@@ -58,11 +58,11 @@ libmfx_git="https://github.com/lu-zero/mfx_dispatch.git"
 libmfx_release="master"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
-libfreetype2_release="VER-2-13-0"
+libfreetype2_release="VER-2-13-1"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="7.1.0"
+harfbuzz_release="8.0.1"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.12" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
+fribidi_release="v1.0.13" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.14.2"
 libass_git="https://github.com/libass/libass.git"
@@ -96,9 +96,9 @@ FFMPEG_OPTIONS="\
     --enable-libfontconfig \
     --enable-libsrt \
     --enable-libzimg \
-    --enable-libmfx \
     --enable-libbluray"
     # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
+    # --enable-libmfx \ Temporarily removing this as it's breaking
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -363,7 +363,7 @@ pushd subs
     git clone -b $libass_release $libass_git libass
     pushd libass
     ./autogen.sh
-    ./configure $configure_params
+    ./configure $configure_params --disable-harfbuzz #Harfbuzz seems to break things so disabling for now
     make -j $threads
     make install
     popd
