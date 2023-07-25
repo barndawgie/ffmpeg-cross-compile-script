@@ -29,6 +29,8 @@ zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.13"
 pcre2_git="https://github.com/PCRE2Project/pcre2.git"
 pcre2_release="pcre2-10.42"
+libffi_git="https://github.com/libffi/libffi.git"
+libffi_release="v3.4.4"
 glib_git="https://gitlab.gnome.org/GNOME/glib.git"
 glib_release="2.77.0"
 sdl_git="https://github.com/libsdl-org/SDL.git"
@@ -127,7 +129,7 @@ pushd libs
     install -m644 $bzip_pc_file_path $PKG_CONFIG_PATH
     popd
 
-    #ZLIB: Required for FreeTyep2
+    #zlib
     git clone -b $zlib_release $zlib_git zlib
     pushd zlib
     sed -i /"PREFIX ="/d win32/Makefile.gcc
@@ -136,7 +138,7 @@ pushd libs
     BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
     popd
 
-    #pcre2
+    #pcre2: Required for glib
     git clone -b $pcre2_release $pcre2_git pcre2
     pushd pcre2
     ./autogen.sh $configure_params
@@ -148,8 +150,8 @@ pushd libs
     install -m644 libpcre2-8.pc $PKG_CONFIG_PATH
     popd
 
-    #libffi - Needed for glib
-    git clone -b v3.4.4 https://github.com/libffi/libffi.git libffi
+    #libffi: Required for glib
+    git clone -b $libffi_release $libffi_git libffi
     pushd libffi
     ./autogen.sh $configure_params
     ./configure $configure_params
@@ -157,7 +159,7 @@ pushd libs
     make install
     popd
 
-    #glib
+    #glib: Required for libmfx, harfbuzz
     git clone -b $glib_release $glib_git glib
     pushd glib
     mkdir -p build
@@ -302,7 +304,7 @@ pushd video
         ../../source
     make -j $threads
 
-    #Combine all Libraries
+    #Combine all x265 Libraries
     mv libx265.a libx265_main.a
     ar -M <$x265_mri_path
     make install
@@ -366,7 +368,7 @@ pushd subs
     #Harfbuzz: Optional for libass
     git clone -b $harfbuzz_release $harfbuzz_git harfbuzz
     pushd harfbuzz
-    ./autogen.sh $configure_params
+    ./autogen.sh $configure_params --with-icu=off #Still seeing some weird build failures with glib
     make -j $threads
     make install
     popd
