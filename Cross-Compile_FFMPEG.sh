@@ -27,12 +27,6 @@ bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.
 bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.2.13"
-pcre2_git="https://github.com/PCRE2Project/pcre2.git"
-pcre2_release="pcre2-10.42"
-libffi_git="https://github.com/libffi/libffi.git"
-libffi_release="v3.4.4"
-glib_git="https://gitlab.gnome.org/GNOME/glib.git"
-glib_release="2.77.0"
 sdl_git="https://github.com/libsdl-org/SDL.git"
 sdl_release="release-2.26.5"
 openssl_git="https://github.com/openssl/openssl.git"
@@ -60,8 +54,6 @@ libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.6.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.0.16.0"
-libmfx_git="https://github.com/lu-zero/mfx_dispatch.git"
-libmfx_release="master"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-1"
@@ -137,38 +129,6 @@ pushd libs
     BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc
     BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
     popd
-
-    # #pcre2: Required for glib
-    # git clone -b $pcre2_release $pcre2_git pcre2
-    # pushd pcre2
-    # ./autogen.sh $configure_params
-    # ./configure $configure_params --disable-pcre2grep-jit --disable-pcre2grep-callout --disable-pcre2grep-callout-fork
-    # make -j $threads libpcre2-8.la libpcre2-8.pc 
-    # make -j $threads 
-    # install -m644 ./.libs/libpcre2-8.a $library_path
-    # install -m644 ./src/pcre2.h $include_path
-    # install -m644 libpcre2-8.pc $PKG_CONFIG_PATH
-    # popd
-
-    # #libffi: Required for glib
-    # git clone -b $libffi_release $libffi_git libffi
-    # pushd libffi
-    # ./autogen.sh $configure_params
-    # ./configure $configure_params
-    # make -j $threads
-    # make install
-    # popd
-
-    # #glib: Required for libmfx, harfbuzz
-    # git clone -b $glib_release $glib_git glib
-    # pushd glib
-    # mkdir -p build
-    # meson setup --cross-file $config_dir/cross_file.txt --default-library=static --prefix $prefix \
-    #     --bindir=$binary_path --libdir=$library_path --includedir=$include_path --pkg-config-path=$PKG_CONFIG_PATH \
-    #     ./build #Fails if you have PCRE2 installed on your system: https://gitlab.gnome.org/GNOME/glib/-/issues/3058
-    # meson compile -C ./build
-    # meson install -C ./build
-    # popd
 
     #SDL: Required for ffplay compilation
     git clone -b $sdl_release $sdl_git SDL
@@ -395,15 +355,6 @@ pushd video
     pushd ffnvcodec
     make install PREFIX=$prefix
     popd
-
-    # #libmfx
-    # git clone -b $libmfx_release $libmfx_git libmfx
-    # pushd libmfx
-    # autoreconf -i
-    # ./configure $configure_params
-    # make -j $threads
-    # make install
-    # popd
 
 popd #leave video directory
 
