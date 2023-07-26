@@ -72,7 +72,7 @@ fribidi_release="v1.0.13" #Upgrade to v1.0.10 causes fribidi to not be found by 
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.14.2"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.14.0" #Verion 0.15.0 requires harfbuzz
+libass_release="0.17.1" #Verion 0.15.0 requires harfbuzz
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.1"
@@ -103,8 +103,8 @@ FFMPEG_OPTIONS="\
     --enable-libsrt \
     --enable-libzimg \
     --enable-libbluray"
-    # Of Interest: --enable-libbluray --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
-    # --enable-libmfx \ Temporarily removing this as it's breaking
+    #--enable-libmfx
+    # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
 
 mkdir -p $include_path
 mkdir -p $library_path
@@ -138,37 +138,37 @@ pushd libs
     BINARY_PATH=$binary_path INCLUDE_PATH=$include_path LIBRARY_PATH=$library_path PREFIX=$host- make -f win32/Makefile.gcc install
     popd
 
-    #pcre2: Required for glib
-    git clone -b $pcre2_release $pcre2_git pcre2
-    pushd pcre2
-    ./autogen.sh $configure_params
-    ./configure $configure_params --disable-pcre2grep-jit --disable-pcre2grep-callout --disable-pcre2grep-callout-fork
-    make -j $threads libpcre2-8.la libpcre2-8.pc 
-    make -j $threads 
-    install -m644 ./.libs/libpcre2-8.a $library_path
-    install -m644 ./src/pcre2.h $include_path
-    install -m644 libpcre2-8.pc $PKG_CONFIG_PATH
-    popd
+    # #pcre2: Required for glib
+    # git clone -b $pcre2_release $pcre2_git pcre2
+    # pushd pcre2
+    # ./autogen.sh $configure_params
+    # ./configure $configure_params --disable-pcre2grep-jit --disable-pcre2grep-callout --disable-pcre2grep-callout-fork
+    # make -j $threads libpcre2-8.la libpcre2-8.pc 
+    # make -j $threads 
+    # install -m644 ./.libs/libpcre2-8.a $library_path
+    # install -m644 ./src/pcre2.h $include_path
+    # install -m644 libpcre2-8.pc $PKG_CONFIG_PATH
+    # popd
 
-    #libffi: Required for glib
-    git clone -b $libffi_release $libffi_git libffi
-    pushd libffi
-    ./autogen.sh $configure_params
-    ./configure $configure_params
-    make -j $threads
-    make install
-    popd
+    # #libffi: Required for glib
+    # git clone -b $libffi_release $libffi_git libffi
+    # pushd libffi
+    # ./autogen.sh $configure_params
+    # ./configure $configure_params
+    # make -j $threads
+    # make install
+    # popd
 
-    #glib: Required for libmfx, harfbuzz
-    git clone -b $glib_release $glib_git glib
-    pushd glib
-    mkdir -p build
-    meson setup --cross-file $config_dir/cross_file.txt --default-library=static --prefix $prefix \
-        --bindir=$binary_path --libdir=$library_path --includedir=$include_path --pkg-config-path=$PKG_CONFIG_PATH \
-        ./build #Fails if you have PCRE2 installed on your system: https://gitlab.gnome.org/GNOME/glib/-/issues/3058
-    meson compile -C ./build
-    meson install -C ./build
-    popd
+    # #glib: Required for libmfx, harfbuzz
+    # git clone -b $glib_release $glib_git glib
+    # pushd glib
+    # mkdir -p build
+    # meson setup --cross-file $config_dir/cross_file.txt --default-library=static --prefix $prefix \
+    #     --bindir=$binary_path --libdir=$library_path --includedir=$include_path --pkg-config-path=$PKG_CONFIG_PATH \
+    #     ./build #Fails if you have PCRE2 installed on your system: https://gitlab.gnome.org/GNOME/glib/-/issues/3058
+    # meson compile -C ./build
+    # meson install -C ./build
+    # popd
 
     #SDL: Required for ffplay compilation
     git clone -b $sdl_release $sdl_git SDL
@@ -224,6 +224,61 @@ pushd libs
     popd
 
 popd #leave libs directory
+
+# #Subtitle/Font Dependencies
+mkdir -p subs
+pushd subs
+
+    #Libfreetype2: Required for Drawtext Filter
+    git clone -b $libfreetype2_release $libfreetype2_git freetype2
+    pushd freetype2
+    ./autogen.sh
+    ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
+    make -j $threads
+    make install
+    popd
+
+    #Harfbuzz: Optional for libass
+    git clone -b $harfbuzz_release $harfbuzz_git harfbuzz
+    pushd harfbuzz
+    ./autogen.sh $configure_params --with-icu=no --with-glib=no #Still seeing some weird build failures with glib
+    make -j $threads
+    make install
+    popd
+
+    # #Rebuild Freetype2 with HarfBuzz - This seems to work but then seems to break Fontconfig build?
+    # pushd freetype2
+    # ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=yes --with-harfbuzz=yes
+    # make -j $threads
+    # make install
+    # popd
+
+    #libfribidi: Required for Libass
+    git clone -b $fribidi_release $fribidi_git fribidi
+    pushd fribidi
+    ./autogen.sh $configure_params
+    make -j $threads
+    make install
+    popd
+
+    #Fontconfig: Improves Drawtext Filter, HarfBuzz
+    git clone -b $fontconfig_release $fontconfig_git fontconfig
+    pushd fontconfig
+    ./autogen.sh $configure_params --enable-libxml2
+    make -j $threads
+    make install
+    popd
+
+    #libass
+    git clone -b $libass_release $libass_git libass
+    pushd libass
+    ./autogen.sh
+    ./configure $configure_params
+    make -j $threads
+    make install
+    popd
+
+popd #Leave subs directory
 
 #Audio Codecs
 mkdir -p audio
@@ -341,71 +396,16 @@ pushd video
     make install PREFIX=$prefix
     popd
 
-    #libmfx
-    git clone -b $libmfx_release $libmfx_git libmfx
-    pushd libmfx
-    autoreconf -i
-    ./configure $configure_params
-    make -j $threads
-    make install
-    popd
-
-popd #leave video directory
-
-# #Subtitle/Font Dependencies
-mkdir -p subs
-pushd subs
-
-    #Libfreetype2: Required for Drawtext Filter
-    git clone -b $libfreetype2_release $libfreetype2_git freetype2
-    pushd freetype2
-    ./autogen.sh
-    ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
-    make -j $threads
-    make install
-    popd
-
-    #Harfbuzz: Optional for libass
-    git clone -b $harfbuzz_release $harfbuzz_git harfbuzz
-    pushd harfbuzz
-    ./autogen.sh $configure_params --with-icu=off #Still seeing some weird build failures with glib
-    make -j $threads
-    make install
-    popd
-
-    # #Rebuild Freetype2 with HarfBuzz - This seems to work but then seems to break Fontconfig build?
-    # pushd freetype2
-    # ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=yes --with-harfbuzz=yes
+    # #libmfx
+    # git clone -b $libmfx_release $libmfx_git libmfx
+    # pushd libmfx
+    # autoreconf -i
+    # ./configure $configure_params
     # make -j $threads
     # make install
     # popd
 
-    #libfribidi: Required for Libass
-    git clone -b $fribidi_release $fribidi_git fribidi
-    pushd fribidi
-    ./autogen.sh $configure_params
-    make -j $threads
-    make install
-    popd
-
-    #Fontconfig: Improves Drawtext Filter, HarfBuzz
-    git clone -b $fontconfig_release $fontconfig_git fontconfig
-    pushd fontconfig
-    ./autogen.sh $configure_params --enable-libxml2
-    make -j $threads
-    make install
-    popd
-
-    #libass
-    git clone -b $libass_release $libass_git libass
-    pushd libass
-    ./autogen.sh
-    ./configure $configure_params --disable-harfbuzz #Harfbuzz seems to break things so disabling for now
-    make -j $threads
-    make install
-    popd
-
-popd #Leave subs directory
+popd #leave video directory
 
 mkdir -p protocols
 pushd protocols
