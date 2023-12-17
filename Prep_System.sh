@@ -18,7 +18,7 @@ if [ ! $c2man_path ]; then #Doesn't seem to work if there is no c2man installed?
     ./Configure -d -e
     make depend
     make
-    make install 
+    make install
     popd
 fi
 popd

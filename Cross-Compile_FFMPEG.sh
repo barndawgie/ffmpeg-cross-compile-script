@@ -64,7 +64,7 @@ fribidi_release="v1.0.13" #Upgrade to v1.0.10 causes fribidi to not be found by 
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.14.2"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.17.1" #Verion 0.15.0 requires harfbuzz
+libass_release="0.17.1" #Version 0.15.0 requires harfbuzz
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.1"
@@ -96,7 +96,7 @@ FFMPEG_OPTIONS="\
     --enable-libzimg \
     --enable-libbluray"
     #--enable-libmfx
-    # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp 
+    # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
 
 mkdir -p $include_path
 mkdir -p $library_path
