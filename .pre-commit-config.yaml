@@ -22,3 +22,7 @@ repos:
         args: ["--severity=error"]
 
 exclude: '\.(diff)$'
+
+ci:
+  autoupdate_schedule: monthly
+  autoupdate_commit_msg: 'ci(pre-commit.ci): pre-commit autoupdate'
