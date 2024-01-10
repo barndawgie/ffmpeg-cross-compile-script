@@ -46,7 +46,8 @@ fdk_release="v2.0.2"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
-x265_hg="http://hg.videolan.org/x265"
+x265_git="https://bitbucket.org/multicoreware/x265_git.git"
+x265_release="3.5"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.0"
@@ -282,10 +283,8 @@ pushd video
     popd
 
     #x265: HEVC Video Encoding for ffmpeg
-    hg clone $x265_hg -r stable
+    git clone -b $x265_release $x265_git x265
     pushd x265
-    hg update -r stable
-    hg pull -u -r stable
     cd ./build
 
     mkdir -p 8bit 10bit 12bit
