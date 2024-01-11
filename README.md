@@ -15,7 +15,7 @@ This (non-free) build includes stable releases of:
 * openssl 1.1.1
 * libxml2
 
-Tested using Ubuntu 20.04 running on WSL.
+Tested using Ubuntu 22.04 running on WSL.
 
 # Usage
 
