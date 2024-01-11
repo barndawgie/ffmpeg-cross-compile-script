@@ -26,23 +26,23 @@ bzip2_release="bzip2-1.0.8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.2.13"
+zlib_release="v1.3"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.26.5"
+sdl_release="release-2.28.5"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
-libpng_release="v1.6.39"
+libpng_release="v1.6.40"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.10.3"
+libxml2_release="v2.12.3"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
-libzimg_release="release-3.0.4"
+libzimg_release="release-3.0.5"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
 libudfread_release="1.1.2"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
-fdk_release="v2.0.2"
+fdk_release="v2.0.3"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
@@ -52,28 +52,28 @@ x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.0"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.6.0"
+libaom_version="v3.8.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
-ffnvcodec_release="n12.0.16.0"
+ffnvcodec_release="n12.1.14.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
-libfreetype2_release="VER-2-13-1"
+libfreetype2_release="VER-2-13-2"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="8.0.1"
+harfbuzz_release="8.3.0"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.13" #Upgrade to v1.0.10 causes fribidi to not be found by ffmpeg; maybe due to https://github.com/fribidi/fribidi/issues/156?
+fribidi_release="v1.0.13"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.14.2"
+fontconfig_release="2.15.0"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.17.1" #Version 0.15.0 requires harfbuzz
+libass_release="0.17.1"
 
 srt_git="https://github.com/Haivision/srt.git"
-srt_release="v1.5.1"
+srt_release="v1.5.3"
 libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n6.0"
+ffmpeg_release="n6.1.1"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -199,7 +199,7 @@ pushd subs
     make install
     popd
 
-    #Harfbuzz: Optional for libass
+    #Harfbuzz: Needed for libass
     git clone -b $harfbuzz_release $harfbuzz_git harfbuzz
     pushd harfbuzz
     ./autogen.sh $configure_params --with-icu=no --with-glib=no #Still seeing some weird build failures with glib
