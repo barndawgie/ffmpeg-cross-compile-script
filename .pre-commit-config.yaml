@@ -18,10 +18,17 @@ repos:
     rev: v0.9.0.6
     hooks:
     -   id: shellcheck
-        args: ["--severity=warning"]
+        args: ["--exclude=SC2086"]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
 
 exclude: '\.(diff)$'
 
 ci:
-  autoupdate_schedule: monthly
   autoupdate_commit_msg: 'ci(pre-commit.ci): pre-commit autoupdate'
+  autoupdate_schedule: monthly
+  skip: [no-commit-to-branch]
