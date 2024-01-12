@@ -1,6 +1,6 @@
 # ffmpeg-cross-compile-script
 
-A script to cross-compile FFmpeg for Windows on Ubuntu 20.04. It's not dissimilar from the widely known ffmpeg-build-helpers, but uses provided mingw packages rather than requiring you to build your own toolchain, and builds everything for 64-bit Windows.
+A script to cross-compile FFmpeg for Windows on Ubuntu 22.04. It's not dissimilar from the widely known ffmpeg-build-helpers, but uses provided mingw packages rather than requiring you to build your own toolchain, and builds everything for 64-bit Windows.
 
 This (non-free) build includes stable releases of:
 
@@ -19,8 +19,8 @@ Tested using Ubuntu 22.04 running on WSL.
 
 # Usage
 
-Do a one-time install of all dependencies by running the following command (probably as root):
+Do a one-time install of all dependencies by running the following command (probably as root/sudo):
 
 `./Prep_System.sh`
 
-Then simply execute the `./Cross-Compile_FFMPEG.sh` script; it will pull required packages down from Git and Mercurial, cross-compile for 64-bit Windows, and deposit the resulting binaries in `./ffmpeg_install/bin/`.
+Then simply execute the `./Cross-Compile_FFMPEG.sh` script; it will pull required packages down from Git, cross-compile for 64-bit Windows, and deposit the resulting binaries in `./ffmpeg_install/bin/`.
