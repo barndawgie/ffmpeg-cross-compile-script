@@ -8,17 +8,17 @@ pip3 install docwriter
 
 #Install c2man: Needed for libfribidi and not available via apt
 mkdir -p packages
-pushd packages
+pushd packages || exit
 c2man_path=$(which c2man)
 if [ ! $c2man_path ]; then #Doesn't seem to work if there is no c2man installed?
     if [ ! -d ./c2man ]; then
     	git clone https://github.com/fribidi/c2man.git
     fi
-    pushd c2man
+    pushd c2man || exit
     ./Configure -d -e
     make depend
     make
     make install
-    popd
+    popd || exit
 fi
-popd
+popd || exit
