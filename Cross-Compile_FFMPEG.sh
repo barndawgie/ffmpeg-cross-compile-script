@@ -101,8 +101,8 @@ FFMPEG_OPTIONS="\
 
 # Helper Methods
 do_git_checkout () {
-  local repo_url="$1"
-  local tag="$2"
+  local repo_url="$2"
+  local tag="$1"
   local to_dir="$3"
 
   if [ ! -d $to_dir ]; then
@@ -127,7 +127,7 @@ mkdir -p libs
 pushd libs || exit
 
     #libbz2
-    do_git_checkout $bzip2_git $bzip2_release bzip2
+    do_git_checkout $bzip2_release $bzip2_git bzip2
     pushd bzip2 || exit
     patch -p0 < $bzip_patchfile_path
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
