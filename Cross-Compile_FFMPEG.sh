@@ -101,8 +101,8 @@ FFMPEG_OPTIONS="\
 
 # Helper Methods
 do_git_checkout () {
-  local repo_url="$2"
-  local tag="$1"
+  local repo_url="$1"
+  local tag="$2"
   local to_dir="$3"
 
   if [ ! -d $to_dir ]; then
@@ -127,7 +127,7 @@ mkdir -p libs
 pushd libs || exit
 
     #libbz2
-    do_git_checkout $bzip2_release $bzip2_git bzip2
+    do_git_checkout $bzip2_git $bzip2_release bzip2
     pushd bzip2 || exit
     patch -p0 < $bzip_patchfile_path
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib make -j $threads libbz2.a
@@ -137,7 +137,7 @@ pushd libs || exit
     popd || exit
 
     #zlib
-    do_git_checkout $zlib_release $zlib_git zlib
+    do_git_checkout $zlib_git $zlib_release zlib
     pushd zlib || exit
     sed -i /"PREFIX ="/d win32/Makefile.gcc
     ./configure -static --prefix=$host-
@@ -146,7 +146,7 @@ pushd libs || exit
     popd || exit
 
     #SDL: Required for ffplay compilation
-    do_git_checkout $sdl_release $sdl_git SDL
+    do_git_checkout $sdl_git $sdl_release SDL
     pushd SDL || exit
     ./autogen.sh
     mkdir -p build
@@ -156,7 +156,7 @@ pushd libs || exit
     popd || exit
 
     #openssl
-    do_git_checkout $openssl_release $openssl_git openssl
+    do_git_checkout $openssl_git $openssl_release openssl
     pushd openssl || exit
     ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
     CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
@@ -165,7 +165,7 @@ pushd libs || exit
     popd || exit
 
     #libpng: Required for FreeType2
-    do_git_checkout $libpng_release $libpng_git libpng
+    do_git_checkout $libpng_git $libpng_release libpng
     pushd libpng || exit
     LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
     make -j $threads
@@ -173,7 +173,7 @@ pushd libs || exit
     popd || exit
 
     #Libxml2
-    do_git_checkout $libxml2_release $libxml2_git libxml2
+    do_git_checkout $libxml2_git $libxml2_release libxml2
     pushd libxml2 || exit
     ./autogen.sh $configure_params --without-python
     make -j $threads
@@ -181,7 +181,7 @@ pushd libs || exit
     popd || exit
 
     #libzimg
-    do_git_checkout $libzimg_release $libzimg_git zimg
+    do_git_checkout $libzimg_git $libzimg_release zimg
     pushd zimg || exit
     ./autogen.sh
     ./configure $configure_params
@@ -190,7 +190,7 @@ pushd libs || exit
     popd || exit
 
     #libudfread: Needed for libbluray
-    do_git_checkout $libudfread_release $libudfread_git libudfread
+    do_git_checkout $libudfread_git $libudfread_release libudfread
     pushd libudfread || exit
     autoreconf -i
     ./configure $configure_params
@@ -205,7 +205,7 @@ mkdir -p subs
 pushd subs || exit
 
     #Libfreetype2: Required for Drawtext Filter
-    do_git_checkout $libfreetype2_release $libfreetype2_git freetype2
+    do_git_checkout $libfreetype2_git $libfreetype2_release freetype2
     pushd freetype2 || exit
     ./autogen.sh
     ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
@@ -214,7 +214,7 @@ pushd subs || exit
     popd || exit
 
     #Harfbuzz: Needed for libass
-    do_git_checkout $harfbuzz_release $harfbuzz_git harfbuzz
+    do_git_checkout $harfbuzz_git $harfbuzz_release harfbuzz
     pushd harfbuzz || exit
     ./autogen.sh $configure_params --with-icu=no --with-glib=no #Still seeing some weird build failures with glib
     make -j $threads
@@ -229,7 +229,7 @@ pushd subs || exit
     # popd || exit
 
     #libfribidi: Required for Libass
-    do_git_checkout $fribidi_release $fribidi_git fribidi
+    do_git_checkout $fribidi_git $fribidi_release fribidi
     pushd fribidi || exit
     ./autogen.sh $configure_params
     make -j $threads
@@ -237,7 +237,7 @@ pushd subs || exit
     popd || exit
 
     #Fontconfig: Improves Drawtext Filter, HarfBuzz
-    do_git_checkout $fontconfig_release $fontconfig_git fontconfig
+    do_git_checkout $fontconfig_git $fontconfig_release fontconfig
     pushd fontconfig || exit
     ./autogen.sh $configure_params --enable-libxml2
     make -j $threads
@@ -245,7 +245,7 @@ pushd subs || exit
     popd || exit
 
     #libass
-    do_git_checkout $libass_release $libass_git libass
+    do_git_checkout $libass_git $libass_release libass
     pushd libass || exit
     ./autogen.sh
     ./configure $configure_params
@@ -274,7 +274,7 @@ pushd audio || exit
     popd || exit
 
     #FDK: The Best AAC Codec for ffmpeg
-    do_git_checkout $fdk_release $fdk_git fdk-aac
+    do_git_checkout $fdk_git $fdk_release fdk-aac
     pushd fdk-aac || exit
     ./autogen.sh
     ./configure $configure_params
@@ -289,7 +289,7 @@ mkdir -p video
 pushd video || exit
 
     #x264: h.264 Video Encoding for ffmpeg
-    do_git_checkout $x264_release $x264_git x264
+    do_git_checkout $x264_git $x264_release x264
     pushd x264 || exit
     ./configure --host=$host --enable-static --cross-prefix=$host- --prefix=$prefix
     make -j $threads
@@ -297,7 +297,7 @@ pushd video || exit
     popd || exit
 
     #x265: HEVC Video Encoding for ffmpeg
-    do_git_checkout $x265_release $x265_git x265
+    do_git_checkout $x265_git $x265_release x265
     pushd x265 || exit
     cd ./build || exit
 
@@ -339,7 +339,7 @@ pushd video || exit
     popd || exit
 
     #openjpeg: JPEG 2000 Codec
-    do_git_checkout $libopenjpeg_release $libopenjpeg_git openjpeg
+    do_git_checkout $libopenjpeg_git $libopenjpeg_release openjpeg
     pushd openjpeg || exit
     mkdir -p build
     cd build || exit
@@ -352,7 +352,7 @@ pushd video || exit
     popd || exit
 
     #libaom: AV1 Codec
-    do_git_checkout $libaom_version $libaom_git aom
+    do_git_checkout $libaom_git $libaom_version aom
     pushd aom || exit
     mkdir -p out
     cd out || exit
@@ -364,7 +364,7 @@ pushd video || exit
     popd || exit
 
     #NVEnc/NVDec
-    do_git_checkout $ffnvcodec_release $ffnvcodec_git ffnvcodec
+    do_git_checkout $ffnvcodec_git $ffnvcodec_release ffnvcodec
     pushd ffnvcodec || exit
     make install PREFIX=$prefix
     popd || exit
@@ -375,7 +375,7 @@ mkdir -p protocols
 pushd protocols || exit
 
     #SRT
-    do_git_checkout $srt_release $srt_git srt
+    do_git_checkout $srt_git $srt_release srt
     pushd srt || exit
     mkdir -p out
     cd out || exit
@@ -391,7 +391,7 @@ pushd protocols || exit
     popd || exit
 
     #libbluray
-    do_git_checkout $libbluray_release $libbluray_git libbluray
+    do_git_checkout $libbluray_git $libbluray_release libbluray
     pushd libbluray || exit
     autoreconf -i
     ./configure $configure_params  --disable-doxygen-doc --disable-bdjava-jar
@@ -402,7 +402,7 @@ pushd protocols || exit
 popd || exit
 
 #Download, Configure, and Build ffmpeg, ffprobe, and ffplay
-do_git_checkout $ffmpeg_release $ffmpeg_git ffmpeg
+do_git_checkout $ffmpeg_git $ffmpeg_release ffmpeg
 pushd ffmpeg || exit
 ./configure --arch=x86_64 \
     --target-os=mingw32 \
