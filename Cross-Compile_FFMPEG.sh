@@ -54,7 +54,7 @@ libopenjpeg_release="v2.5.0"
 libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.8.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
-ffnvcodec_release="n12.1.14.0"
+ffnvcodec_release="n12.2.72.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-2"
@@ -73,7 +73,7 @@ libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n6.1.1"
+ffmpeg_release="n7.0.1"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -94,9 +94,9 @@ FFMPEG_OPTIONS="\
     --enable-libass \
     --enable-libfontconfig \
     --enable-libsrt \
-    --enable-libzimg \
-    --enable-libbluray"
-    #--enable-libmfx
+    --enable-libzimg"
+    # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
+    # --enable-libmfx
     # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
 
 # Helper Methods
@@ -175,7 +175,7 @@ pushd libs || exit
     #Libxml2
     do_git_checkout $libxml2_git $libxml2_release libxml2
     pushd libxml2 || exit
-    ./autogen.sh $configure_params --without-python
+    ./autogen.sh $configure_params --without-python --with-zlib
     make -j $threads
     make install
     popd || exit
