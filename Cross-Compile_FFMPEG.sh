@@ -26,15 +26,15 @@ bzip2_release="bzip2-1.0.8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.3"
+zlib_release="v1.3.1"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.28.5"
+sdl_release="release-2.30.5"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
-libpng_release="v1.6.40"
+libpng_release="v1.6.43"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.12.3"
+libxml2_release="v2.13.2"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="release-3.0.5"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
@@ -47,19 +47,19 @@ fdk_release="v2.0.3"
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
 x265_git="https://bitbucket.org/multicoreware/x265_git.git"
-x265_release="3.5"
+x265_release="Release_3.6"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
-libopenjpeg_release="v2.5.0"
+libopenjpeg_release="v2.5.2"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.8.0"
+libaom_version="v3.8.3"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
-ffnvcodec_release="n12.1.14.0"
+ffnvcodec_release="n12.2.72.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-2"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="8.3.0"
+harfbuzz_release="8.5.0"
 fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.13"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
@@ -73,7 +73,7 @@ libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n6.1.1"
+ffmpeg_release="n7.0.1"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -94,9 +94,9 @@ FFMPEG_OPTIONS="\
     --enable-libass \
     --enable-libfontconfig \
     --enable-libsrt \
-    --enable-libzimg \
-    --enable-libbluray"
-    #--enable-libmfx
+    --enable-libzimg"
+    # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
+    # --enable-libmfx
     # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
 
 # Helper Methods
@@ -175,7 +175,7 @@ pushd libs || exit
     #Libxml2
     do_git_checkout $libxml2_git $libxml2_release libxml2
     pushd libxml2 || exit
-    ./autogen.sh $configure_params --without-python
+    ./autogen.sh $configure_params --without-python --with-zlib
     make -j $threads
     make install
     popd || exit
