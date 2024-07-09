@@ -53,6 +53,8 @@ libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.2"
 libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.8.3"
+dav1d_git="https://code.videolan.org/videolan/dav1d.git"
+dav1d_version="1.4.3"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.2.72.0"
 
@@ -61,11 +63,11 @@ libfreetype2_release="VER-2-13-2"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
 harfbuzz_release="8.5.0"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.13"
+fribidi_release="v1.0.15"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.15.0"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.17.1"
+libass_release="0.17.3"
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.3"
@@ -94,7 +96,8 @@ FFMPEG_OPTIONS="\
     --enable-libass \
     --enable-libfontconfig \
     --enable-libsrt \
-    --enable-libzimg"
+    --enable-libzimg \
+    --enable-libdav1d"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
     # --enable-libmfx
     # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
@@ -361,6 +364,15 @@ pushd video || exit
         ..
     make -j $threads
     make install
+    popd || exit
+
+    #dav1d: AV1 Decoder
+    do_git_checkout $dav1d_git $dav1d_version dav1d
+    pushd dav1d || exit
+    meson setup build --cross-file=package/crossfiles/x86_64-w64-mingw32.meson --default-library=static --prefix=$prefix
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
     #NVEnc/NVDec
