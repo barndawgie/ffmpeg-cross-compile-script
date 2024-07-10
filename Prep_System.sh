@@ -7,8 +7,8 @@ apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 yasm make automake autocon
 pip3 install docwriter
 
 #Install c2man: Needed for libfribidi and not available via apt
-mkdir -p packages
-pushd packages || exit
+mkdir -p prep
+pushd prep || exit
 c2man_path=$(which c2man)
 if [ ! $c2man_path ]; then #Doesn't seem to work if there is no c2man installed?
     if [ ! -d ./c2man ]; then

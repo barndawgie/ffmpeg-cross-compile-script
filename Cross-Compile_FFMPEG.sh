@@ -12,8 +12,9 @@ config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
-threads="1" #Seeing failures for some reason with parallel builds
+threads="4" #Seeing failures for some reason with parallel builds
 configure_params="--host=$host --build=$build --prefix=$prefix --enable-static --disable-shared"
+meson_params="--cross-file=$config_dir/cross_file.txt --prefix $prefix --default-library static --buildtype release"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
 export PKG_CONFIG_PATH="$prefix/lib/pkgconfig"
 export CFLAGS="-I$include_path"
@@ -61,6 +62,8 @@ libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
 libsvtav1_version="v2.1.2"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.2.72.0"
+libvmaf_git="https://github.com/Netflix/vmaf.git"
+libvmaf_release="v3.0.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-2"
@@ -102,10 +105,10 @@ FFMPEG_OPTIONS="\
     --enable-libsrt \
     --enable-libzimg \
     --enable-libdav1d \
-    --enable-libsvtav1"
+    --enable-libsvtav1 \
+    --enable-libvmaf"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
-    # --enable-libmfx
-    # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
+    # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
 # Helper Methods
 do_git_checkout () {
@@ -385,7 +388,7 @@ pushd video || exit
     #dav1d: AV1 Decoder
     do_git_checkout $dav1d_git $dav1d_version dav1d
     pushd dav1d || exit
-    meson setup build --cross-file=package/crossfiles/x86_64-w64-mingw32.meson --default-library=static --prefix=$prefix
+    meson setup build $meson_params
     cd ./build || exit
     ninja
     ninja install
@@ -402,6 +405,13 @@ pushd video || exit
     do_git_checkout $ffnvcodec_git $ffnvcodec_release ffnvcodec
     pushd ffnvcodec || exit
     make install PREFIX=$prefix
+    popd || exit
+
+    #libvmaf
+    do_git_checkout $libvmaf_git $libvmaf_release vmaf
+    pushd vmaf || exit
+    meson setup libvmaf libvmaf/build $meson_params -Denable_tests=false -Denable_docs=false
+    meson install -C libvmaf/build
     popd || exit
 
 popd || exit #leave video directory
