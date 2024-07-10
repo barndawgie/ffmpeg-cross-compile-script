@@ -13,6 +13,7 @@ jobs:
     name: Build FFMPEG
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: "Install Dependencies"
         run: |
           ./Prep_System.sh
