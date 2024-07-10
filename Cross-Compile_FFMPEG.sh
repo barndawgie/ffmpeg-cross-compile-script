@@ -376,6 +376,7 @@ pushd video || exit
     cd out || exit
     cmake -DCMAKE_TOOLCHAIN_FILE="../build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
         -DCMAKE_INSTALL_PREFIX=$prefix \
+        -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF \
         ..
     make -j $threads
     make install
