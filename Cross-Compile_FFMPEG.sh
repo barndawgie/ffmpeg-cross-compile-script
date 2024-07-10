@@ -46,6 +46,8 @@ cpuinfo_version="main"
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.3"
+opus_git="https://github.com/xiph/opus.git"
+opus_release="v1.4"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
@@ -106,7 +108,8 @@ FFMPEG_OPTIONS="\
     --enable-libzimg \
     --enable-libdav1d \
     --enable-libsvtav1 \
-    --enable-libvmaf"
+    --enable-libvmaf \
+    --enable-libopus"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
     # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
@@ -298,6 +301,15 @@ pushd audio || exit
     do_git_checkout $fdk_git $fdk_release fdk-aac
     pushd fdk-aac || exit
     ./autogen.sh
+    ./configure $configure_params
+    make -j $threads
+    make install
+    popd || exit
+
+    # opus: Audio Codec
+    do_git_checkout $opus_git $opus_release opus
+    pushd opus || exit
+    ./autogen.sh $configure_params
     ./configure $configure_params
     make -j $threads
     make install
