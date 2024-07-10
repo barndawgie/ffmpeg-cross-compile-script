@@ -10,3 +10,4 @@ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-static-libgcc -static-libstdc++ -static 
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-static-libgcc -static-libstdc++ -static -O3 -s")
 SET(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static -O3 -s")
 SET(CMAKE_CXX_LINK_EXECUTABLE "-static-libgcc -static-libstdc++ -static -O3 -s")
+SET(CMAKE_SYSTEM_PROCESSOR "AMD64")

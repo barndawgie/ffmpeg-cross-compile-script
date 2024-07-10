@@ -39,6 +39,8 @@ libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="release-3.0.5"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
 libudfread_release="1.1.2"
+cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
+cpuinfo_version="main"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
@@ -55,6 +57,8 @@ libaom_git="https://aomedia.googlesource.com/aom"
 libaom_version="v3.8.3"
 dav1d_git="https://code.videolan.org/videolan/dav1d.git"
 dav1d_version="1.4.3"
+libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
+libsvtav1_version="v2.1.2"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.2.72.0"
 
@@ -97,7 +101,8 @@ FFMPEG_OPTIONS="\
     --enable-libfontconfig \
     --enable-libsrt \
     --enable-libzimg \
-    --enable-libdav1d"
+    --enable-libdav1d \
+    --enable-libsvtav1"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
     # --enable-libmfx
     # Of Interest: --enable-libdav1d --enable-libopus --enable-libtheora --enable-libvmaf  --enable-libvorbis --enable-libvpx --enable-libwebp
@@ -199,6 +204,16 @@ pushd libs || exit
     ./configure $configure_params
     make -j $threads
     make install
+    popd || exit
+
+    #CPUInfo: Needed for libstvav1
+    do_git_checkout $cpuinfo_git $cpuinfo_version cpuinfo
+    pushd cpuinfo || exit
+    ./scripts/local-build.sh -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix -DCPUINFO_BUILD_BENCHMARKS=OFF -DCPUINFO_BUILD_TOOLS=OFF \
+        -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF
+    cd build/local || exit
+    ninja install
     popd || exit
 
 popd || exit #leave libs directory
@@ -373,6 +388,13 @@ pushd video || exit
     cd ./build || exit
     ninja
     ninja install
+    popd || exit
+
+    #libsvtav1: AV1 Codec
+    do_git_checkout $libsvtav1_git $libsvtav1_version libsvtav1
+    pushd libsvtav1 || exit
+    cd Build/linux || exit
+    ./build.sh -t "$config_dir/toolchain-x86_64-w64-mingw32.cmake" -p $prefix --static install
     popd || exit
 
     #NVEnc/NVDec
