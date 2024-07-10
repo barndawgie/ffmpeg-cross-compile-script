@@ -12,7 +12,7 @@ config_dir="$(pwd)/config"
 library_path="$prefix/lib"
 binary_path="$prefix/bin"
 include_path="$prefix/include"
-threads="1" #Seeing failures for some reason with parallel builds
+threads="4" #Seeing failures for some reason with parallel builds
 configure_params="--host=$host --build=$build --prefix=$prefix --enable-static --disable-shared"
 meson_params="--cross-file=$config_dir/cross_file.txt --prefix $prefix --default-library static --buildtype release"
 compiler_params="-static-libgcc -static-libstdc++ -static -O3 -s"
