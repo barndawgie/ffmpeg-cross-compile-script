@@ -13,3 +13,6 @@ objcopy = 'x86_64-w64-mingw32-objcopy'
 strip = 'x86_64-w64-mingw32-strip'
 pkgconfig = 'pkg-config'
 windres = 'x86_64-w64-mingw32-windres'
+
+[built-in options]
+c_link_args = ['-static-libgcc']
