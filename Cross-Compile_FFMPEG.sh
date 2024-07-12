@@ -410,7 +410,9 @@ pushd video || exit
     do_git_checkout $libsvtav1_git $libsvtav1_version libsvtav1
     pushd libsvtav1 || exit
     cd Build/linux || exit
-    ./build.sh -t "$config_dir/toolchain-x86_64-w64-mingw32.cmake" -p $prefix --static install
+    ./build.sh -t "$config_dir/toolchain-x86_64-w64-mingw32.cmake" -p $prefix --static \
+        --enable-avx512 --enable-lto \
+        install
     popd || exit
 
     #NVEnc/NVDec
