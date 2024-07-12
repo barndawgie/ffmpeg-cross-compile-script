@@ -269,7 +269,7 @@ pushd subs || exit
     do_git_checkout $libass_git $libass_release libass
     pushd libass || exit
     ./autogen.sh
-    ./configure $configure_params  --disable-shared
+    ./configure $configure_params
     make -j $threads
     make install
     popd || exit
