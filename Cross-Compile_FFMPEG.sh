@@ -269,7 +269,7 @@ pushd subs || exit
     do_git_checkout $libass_git $libass_release libass
     pushd libass || exit
     ./autogen.sh
-    ./configure $configure_params  --disable-shared
+    ./configure $configure_params
     make -j $threads
     make install
     popd || exit
@@ -307,7 +307,8 @@ pushd audio || exit
     do_git_checkout $opus_git $opus_release opus
     pushd opus || exit
     ./autogen.sh $configure_params
-    ./configure $configure_params
+    ./configure $configure_params \
+        --disable-doc --disable-extra-programs
     make -j $threads
     make install
     popd || exit
@@ -389,6 +390,7 @@ pushd video || exit
     cmake -DCMAKE_TOOLCHAIN_FILE="../build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
         -DCMAKE_INSTALL_PREFIX=$prefix \
         -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF \
+        -DENABLE_EXAMPLES=OFF -DENABLE_TOOLS=OFF \
         ..
     make -j $threads
     make install
@@ -397,7 +399,8 @@ pushd video || exit
     #dav1d: AV1 Decoder
     do_git_checkout $dav1d_git $dav1d_version dav1d
     pushd dav1d || exit
-    meson setup build $meson_params
+    meson setup build $meson_params \
+        -Denable_tools=false -Denable_tests=false
     cd ./build || exit
     ninja
     ninja install
