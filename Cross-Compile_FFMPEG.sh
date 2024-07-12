@@ -70,7 +70,7 @@ libvmaf_release="v3.0.0"
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-13-2"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="8.5.0"
+harfbuzz_release="9.0.0"
 fribidi_git="https://github.com/fribidi/fribidi.git"
 fribidi_release="v1.0.15"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
@@ -165,7 +165,7 @@ pushd libs || exit
     ./autogen.sh
     mkdir -p build
     cd build || exit
-    ../configure $configure_params
+    ../configure $configure_params --disable-alsatest --disable-esdtest
     make install
     popd || exit
 
@@ -173,7 +173,8 @@ pushd libs || exit
     do_git_checkout $openssl_git $openssl_release openssl
     pushd openssl || exit
     ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
-    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path no-shared no-dso zlib mingw64
+    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path \
+        no-shared no-dso zlib mingw64 no-tests
     make -j $threads
     make install_sw
     popd || exit
@@ -181,7 +182,7 @@ pushd libs || exit
     #libpng: Required for FreeType2
     do_git_checkout $libpng_git $libpng_release libpng
     pushd libpng || exit
-    LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params
+    LDFLAGS="-L$library_path" CPPFLAGS="-I$include_path" ./configure $configure_params --disable-tests --disable-tools
     make -j $threads
     make install
     popd || exit
@@ -232,7 +233,8 @@ pushd subs || exit
     do_git_checkout $libfreetype2_git $libfreetype2_release freetype2
     pushd freetype2 || exit
     ./autogen.sh
-    ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
+    ./configure $configure_params \
+        --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=no --with-harfbuzz=no
     make -j $threads
     make install
     popd || exit
@@ -240,17 +242,12 @@ pushd subs || exit
     #Harfbuzz: Needed for libass
     do_git_checkout $harfbuzz_git $harfbuzz_release harfbuzz
     pushd harfbuzz || exit
-    ./autogen.sh $configure_params --with-icu=no --with-glib=no #Still seeing some weird build failures with glib
-    make -j $threads
-    make install
+    meson build $meson_params \
+        -Dglib=disabled -Dicu=disabled -Dgobject=disabled \
+        -Dtests=disabled -Ddocs=disabled -Dutilities=disabled
+    ninja -Cbuild
+    ninja -Cbuild install
     popd || exit
-
-    # #Rebuild Freetype2 with HarfBuzz - This seems to work but then seems to break Fontconfig build?
-    # pushd freetype2
-    # ./configure $configure_params --with-zlib=yes --with-png=yes --with-bzip2=yes --with-brotli=yes --with-harfbuzz=yes
-    # make -j $threads
-    # make install
-    # popd || exit
 
     #libfribidi: Required for Libass
     do_git_checkout $fribidi_git $fribidi_release fribidi
@@ -272,7 +269,7 @@ pushd subs || exit
     do_git_checkout $libass_git $libass_release libass
     pushd libass || exit
     ./autogen.sh
-    ./configure $configure_params
+    ./configure $configure_params  --disable-shared
     make -j $threads
     make install
     popd || exit
