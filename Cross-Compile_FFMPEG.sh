@@ -113,7 +113,8 @@ FFMPEG_OPTIONS="\
     --enable-libdav1d \
     --enable-libsvtav1 \
     --enable-libvmaf \
-    --enable-libopus"
+    --enable-libopus \
+    --enable-libmfx"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
     # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
