@@ -42,6 +42,8 @@ libudfread_git="https://code.videolan.org/videolan/libudfread.git"
 libudfread_release="1.1.2"
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
+libunibreak_git="https://github.com/adah1972/libunibreak.git"
+libunibreak_version="libunibreak_6_1"
 
 lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
@@ -52,7 +54,7 @@ opus_release="v1.4"
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
 x265_git="https://bitbucket.org/multicoreware/x265_git.git"
-x265_release="Release_3.6"
+x265_release="stable"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.2"
@@ -84,7 +86,7 @@ libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n7.0.1"
+ffmpeg_release="n7.1"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -221,6 +223,14 @@ pushd libs || exit
         -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF
     cd build/local || exit
     ninja install
+    popd || exit
+
+    #libunibreak: Needed for libass
+    do_git_checkout $libunibreak_git $libunibreak_version libunibreak
+    pushd libunibreak || exit
+    ./autogen.sh $configure_params
+    make -j $threads
+    make install
     popd || exit
 
 popd || exit #leave libs directory
