@@ -59,11 +59,11 @@ x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
 libopenjpeg_release="v2.5.2"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.8.3"
+libaom_version="v3.10.0"
 dav1d_git="https://code.videolan.org/videolan/dav1d.git"
 dav1d_version="1.4.3"
 libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
-libsvtav1_version="v2.1.2"
+libsvtav1_version="v2.2.1"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.2.72.0"
 libvmaf_git="https://github.com/Netflix/vmaf.git"
@@ -402,7 +402,7 @@ pushd video || exit
         -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF \
         -DENABLE_EXAMPLES=OFF -DENABLE_TOOLS=OFF \
         ..
-    make -j $threads
+    make # "-j $threads" removed since parallel builds seem to fail
     make install
     popd || exit
 
