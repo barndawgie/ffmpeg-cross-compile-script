@@ -66,6 +66,8 @@ libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
 libsvtav1_version="v2.2.1"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n12.2.72.0"
+msdk_git="https://github.com/Intel-Media-SDK/MediaSDK.git"
+msdk_release="intel-mediasdk-21.3.5"
 libvmaf_git="https://github.com/Netflix/vmaf.git"
 libvmaf_release="v3.0.0"
 
@@ -111,7 +113,8 @@ FFMPEG_OPTIONS="\
     --enable-libdav1d \
     --enable-libsvtav1 \
     --enable-libvmaf \
-    --enable-libopus"
+    --enable-libopus \
+    --enable-libmfx"
     # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
     # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
@@ -429,6 +432,19 @@ pushd video || exit
     do_git_checkout $ffnvcodec_git $ffnvcodec_release ffnvcodec
     pushd ffnvcodec || exit
     make install PREFIX=$prefix
+    popd || exit
+
+    # Intel Media SDK (Quick Sync Video)
+    do_git_checkout $msdk_git $msdk_release MediaSDK
+    pushd MediaSDK || exit
+    mkdir -p build
+    cd build || exit
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" \
+        -DCMAKE_INSTALL_PREFIX=$prefix -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SAMPLES=OFF -DBUILD_TUTORIALS=OFF -DBUILD_DISPATCHER=OFF \
+        ..
+    make -j $threads
+    make install
     popd || exit
 
     #libvmaf
