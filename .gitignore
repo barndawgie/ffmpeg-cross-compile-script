@@ -1,3 +1,6 @@
 #Ignore Repos and Builds
 packages
 ffmpeg_install
+prep
+
+.python-version
