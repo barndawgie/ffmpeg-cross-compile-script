@@ -29,17 +29,17 @@ bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.3.1"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.32.10" # Now has a 3.* release
+sdl_release="release-3.2.22"
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.50"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.14.5"
+libxml2_release="v2.14.6"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="v3.0"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
-libudfread_release="1.1.2"
+libudfread_release="1.2.0"
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
@@ -78,12 +78,12 @@ fribidi_release="v1.0.15"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
 fontconfig_release="2.15.0"
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.17.3"
+libass_release="0.17.4"
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.4"
 libbluray_git="https://code.videolan.org/videolan/libbluray.git"
-libbluray_release="1.3.4" # v1.4 moves to Meson
+libbluray_release="1.4.0" # v1.4 moves to Meson
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n8.0"
@@ -164,10 +164,8 @@ pushd libs || exit
     #SDL: Required for ffplay compilation
     do_git_checkout $sdl_git $sdl_release SDL
     pushd SDL || exit
-    ./autogen.sh
-    mkdir -p build
-    cd build || exit
-    ../configure $configure_params --disable-alsatest --disable-esdtest
+    cmake -DCMAKE_TOOLCHAIN_FILE="$config_dir/toolchain-x86_64-w64-mingw32.cmake" -DCMAKE_INSTALL_PREFIX=$prefix -DSDL_SHARED=OFF -DSDL_STATIC=ON .
+    make -j $threads
     make install
     popd || exit
 
@@ -209,10 +207,10 @@ pushd libs || exit
     #libudfread: Needed for libbluray
     do_git_checkout $libudfread_git $libudfread_release libudfread
     pushd libudfread || exit
-    autoreconf -i
-    ./configure $configure_params
-    make -j $threads
-    make install
+    meson setup build $meson_params
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
     #CPUInfo: Needed for libstvav1
@@ -462,10 +460,11 @@ pushd protocols || exit
     #libbluray
     do_git_checkout $libbluray_git $libbluray_release libbluray
     pushd libbluray || exit
-    autoreconf -i
-    ./configure $configure_params  --disable-doxygen-doc --disable-bdjava-jar
-    make -j $threads
-    make install
+    
+    meson setup build $meson_params -Dprefer_static=true -Denable_tools=false -Dbdj_jar=disabled
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
 popd || exit
