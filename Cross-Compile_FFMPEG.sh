@@ -29,15 +29,15 @@ bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.3.1"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.30.5"
+sdl_release="release-2.32.10" # Now has a 3.* release
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable"
 libpng_git="https://github.com/glennrp/libpng.git"
-libpng_release="v1.6.43"
+libpng_release="v1.6.50"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.13.2"
+libxml2_release="v2.14.5"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
-libzimg_release="release-3.0.5"
+libzimg_release="v3.0"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
 libudfread_release="1.1.2"
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
@@ -49,7 +49,7 @@ lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.3"
 opus_git="https://github.com/xiph/opus.git"
-opus_release="v1.4"
+opus_release="v1.5.2"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
@@ -57,15 +57,15 @@ x265_git="https://bitbucket.org/multicoreware/x265_git.git"
 x265_release="stable"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
-libopenjpeg_release="v2.5.2"
+libopenjpeg_release="v2.5.3"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.10.0"
+libaom_version="v3.13.1"
 dav1d_git="https://code.videolan.org/videolan/dav1d.git"
-dav1d_version="1.4.3"
+dav1d_version="1.5.1"
 libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
-libsvtav1_version="v2.2.1"
+libsvtav1_version="v3.1.2"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
-ffnvcodec_release="n12.2.72.0"
+ffnvcodec_release="n13.0.19.0"
 libvmaf_git="https://github.com/Netflix/vmaf.git"
 libvmaf_release="v3.0.0"
 
@@ -81,12 +81,12 @@ libass_git="https://github.com/libass/libass.git"
 libass_release="0.17.3"
 
 srt_git="https://github.com/Haivision/srt.git"
-srt_release="v1.5.3"
+srt_release="v1.5.4"
 libbluray_git="https://code.videolan.org/videolan/libbluray.git"
-libbluray_release="1.3.4"
+libbluray_release="1.3.4" # v1.4 moves to Meson
 
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n7.1"
+ffmpeg_release="n8.0"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -192,7 +192,7 @@ pushd libs || exit
     #Libxml2
     do_git_checkout $libxml2_git $libxml2_release libxml2
     pushd libxml2 || exit
-    ./autogen.sh $configure_params --without-python --with-zlib
+    ./autogen.sh $configure_params --without-python --without-iconv --with-zlib
     make -j $threads
     make install
     popd || exit
