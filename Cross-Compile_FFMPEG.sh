@@ -460,7 +460,7 @@ pushd protocols || exit
     #libbluray
     do_git_checkout $libbluray_git $libbluray_release libbluray
     pushd libbluray || exit
-    
+
     meson setup build $meson_params -Dprefer_static=true -Denable_tools=false -Dbdj_jar=disabled
     cd ./build || exit
     ninja
