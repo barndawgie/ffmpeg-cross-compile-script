@@ -86,7 +86,7 @@ srt_release="v1.5.3"
 libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n7.1"
+ffmpeg_release="n8.1.2"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
