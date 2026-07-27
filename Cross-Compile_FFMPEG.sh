@@ -321,7 +321,6 @@ pushd audio || exit
     #lameMP3
     do_svn_checkout $lame_svn $lame_release lame
     pushd lame || exit
-    cd lame || exit  # Old versions have this subdirectory, newer versions do not. Need to remove this to get 3.101 or 4.0 working.
     ./configure $configure_params --disable-gtktest --enable-nasm  --disable-analyzer-hooks --disable-decoder --disable-frontend
     make -j $threads
     make install
