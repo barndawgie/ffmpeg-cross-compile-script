@@ -310,7 +310,7 @@ pushd audio || exit
     ./configure $configure_params --disable-gtktest --enable-nasm  --disable-analyzer-hooks --disable-decoder --disable-frontend
     make -j $threads
     make install
-    popd || exit
+    popd ||
 
     #FDK: The Best AAC Codec for ffmpeg
     do_git_checkout $fdk_git $fdk_release fdk-aac
