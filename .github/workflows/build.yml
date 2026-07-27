@@ -12,7 +12,7 @@ jobs:
   build:
     name: Build FFMPEG
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - name: "Install Dependencies"
@@ -21,3 +21,7 @@ jobs:
       - name: "Build FFMPEG"
         run: |
           ./Cross-Compile_FFMPEG.sh
+      - name: 'Verify Binaries Created'
+        uses: thebinaryfelix/check-file-existence-action@2.0.0 # check the latest release
+        with:
+          files: './ffmpeg_install/bin/ffmpeg.exe, ./ffmpeg_install/bin/ffprobe.exe, ./ffmpeg_install/bin/ffplay.exe'
