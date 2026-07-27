@@ -45,7 +45,8 @@ cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
 libunibreak_version="libunibreak_6_1"
 
-lame_download="https://versaweb.dl.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
+lame_svn="https://svn.code.sf.net/p/lame/svn/"
+lame_release="RELEASE__3_100"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.3"
 opus_git="https://github.com/xiph/opus.git"
@@ -84,7 +85,6 @@ srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.3"
 libbluray_git="https://code.videolan.org/videolan/libbluray.git"
 libbluray_release="1.3.4"
-
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n7.1"
 
@@ -126,6 +126,19 @@ do_git_checkout () {
     git clone -b $tag $repo_url $to_dir
   else
     echo "Skipping clone as $to_dir is already present."
+  fi
+}
+
+do_svn_checkout () {
+  local repo_url="$1"
+  local tag="$2"
+  local to_dir="$3"
+
+  if [ ! -d $to_dir ]; then
+    echo "Cloning $repo_url/tags/$tag to $to_dir"
+    svn checkout $repo_url/tags/$tag $to_dir
+  else
+    echo "Skipping svn checkout as $to_dir is already present."
   fi
 }
 
@@ -291,14 +304,9 @@ mkdir -p audio
 pushd audio || exit
 
     #lameMP3
-    if [ ! -d ./lame ]
-    then
-        mkdir -p lame
-        curl $lame_download -o lame.tar.gz
-        tar -xvzf lame.tar.gz --directory lame --strip-components=1
-        rm lame.tar.gz
-    fi
+    do_svn_checkout $lame_svn $lame_release lame
     pushd lame || exit
+    cd lame || exit  # Old versions have this subdirectory, newer versions do not. Need to remove this to get 3.101 or 4.0 working.
     ./configure $configure_params --disable-gtktest --enable-nasm
     make -j $threads
     make install
