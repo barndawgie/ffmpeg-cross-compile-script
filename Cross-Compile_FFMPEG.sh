@@ -44,9 +44,10 @@ cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
 libunibreak_version="libunibreak_6_1"
+libmpg123_url="https://www.mpg123.de/download/mpg123-1.33.6.tar.bz2"
 
 lame_svn="https://svn.code.sf.net/p/lame/svn/"
-lame_release="RELEASE__3_100"
+lame_release="RELEASE__4_0"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.3"
 opus_git="https://github.com/xiph/opus.git"
@@ -242,6 +243,20 @@ pushd libs || exit
     do_git_checkout $libunibreak_git $libunibreak_version libunibreak
     pushd libunibreak || exit
     ./autogen.sh $configure_params
+    make -j $threads
+    make install
+    popd || exit
+
+    #libmpg123: Needed for LAME MP3
+    if [ ! -d ./mpg123 ]
+    then
+        mkdir -p mpg123
+        curl $libmpg123_url -o mpg123.tar.bz2
+        tar -xvf mpg123.tar.bz2 --directory mpg123 --strip-components=1
+        rm mpg123.tar.bz2
+    fi
+    pushd mpg123 || exit
+    ./configure $configure_params --disable-components --enable-libmpg123
     make -j $threads
     make install
     popd || exit
