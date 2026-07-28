@@ -27,30 +27,30 @@ bzip2_release="bzip2-1.0.8"
 bzip_patchfile_path="$patch_dir/bzip2-1.0.8_brokenstuff.diff" #From https://raw.githubusercontent.com/rdp/ffmpeg-windows-build-helpers/master/patches/bzip2-1.0.8_brokenstuff.diff
 bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
-zlib_release="v1.3.1"
+zlib_release="v1.3.2"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.30.5"
+sdl_release="release-2.32.8" # TODO: Move to v3?
 openssl_git="https://github.com/openssl/openssl.git"
-openssl_release="OpenSSL_1_1_1-stable"
+openssl_release="OpenSSL_1_1_1-stable" # TODO: Move to newer releases?
 libpng_git="https://github.com/glennrp/libpng.git"
-libpng_release="v1.6.43"
+libpng_release="v1.6.58"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
-libxml2_release="v2.13.2"
+libxml2_release="v2.15.3"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
-libzimg_release="release-3.0.5"
+libzimg_release="release-3.0.6"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
-libudfread_release="1.1.2"
+libudfread_release="1.1.2" # TODO: move to Meson for newest release
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
-libunibreak_version="libunibreak_6_1"
+libunibreak_version="libunibreak_7_0"
 
 lame_svn="https://svn.code.sf.net/p/lame/svn/"
 lame_release="RELEASE__4_0"
 fdk_git="https://github.com/mstorsjo/fdk-aac.git"
 fdk_release="v2.0.3"
 opus_git="https://github.com/xiph/opus.git"
-opus_release="v1.4"
+opus_release="v1.5.2"
 
 x264_git="https://code.videolan.org/videolan/x264.git"
 x264_release="stable"
@@ -58,35 +58,35 @@ x265_git="https://bitbucket.org/multicoreware/x265_git.git"
 x265_release="stable"
 x265_mri_path="$patch_dir/x265.mri"
 libopenjpeg_git="https://github.com/uclouvain/openjpeg.git"
-libopenjpeg_release="v2.5.2"
+libopenjpeg_release="v2.5.4"
 libaom_git="https://aomedia.googlesource.com/aom"
-libaom_version="v3.10.0"
+libaom_version="v3.14.1"
 dav1d_git="https://code.videolan.org/videolan/dav1d.git"
-dav1d_version="1.4.3"
+dav1d_version="1.5.4"
 libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
-libsvtav1_version="v2.2.1"
+libsvtav1_version="v4.2.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
-ffnvcodec_release="n12.2.72.0"
-libvmaf_git="https://github.com/Netflix/vmaf.git"
-libvmaf_release="v3.0.0"
+ffnvcodec_release="n13.1.15.0"
+libvmaf_git="https://github.com/Netflix/vmaf.git" # TODO: Upgrade to VMAFv1
+libvmaf_release="v3.1.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
-libfreetype2_release="VER-2-13-2"
+libfreetype2_release="VER-2-14-3"
 harfbuzz_git="https://github.com/harfbuzz/harfbuzz.git"
-harfbuzz_release="9.0.0"
+harfbuzz_release="14.2.1"
 fribidi_git="https://github.com/fribidi/fribidi.git"
-fribidi_release="v1.0.15"
+fribidi_release="v1.0.16"
 fontconfig_git="https://gitlab.freedesktop.org/fontconfig/fontconfig.git"
-fontconfig_release="2.15.0"
+fontconfig_release="2.17.1" # 2.18 seems broken due to FcLocaleSetCurrent call
 libass_git="https://github.com/libass/libass.git"
-libass_release="0.17.3"
+libass_release="0.17.5"
 
 srt_git="https://github.com/Haivision/srt.git"
-srt_release="v1.5.3"
-libbluray_git="https://code.videolan.org/videolan/libbluray.git"
+srt_release="v1.5.6"
+libbluray_git="https://code.videolan.org/videolan/libbluray.git" # TODO: Move to Meson for newer releases
 libbluray_release="1.3.4"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
-ffmpeg_release="n7.1"
+ffmpeg_release="n8.1.2"
 
 #FFMPEG Configuration
 FFMPEG_OPTIONS="\
@@ -205,7 +205,7 @@ pushd libs || exit
     #Libxml2
     do_git_checkout $libxml2_git $libxml2_release libxml2
     pushd libxml2 || exit
-    ./autogen.sh $configure_params --without-python --with-zlib
+    ./autogen.sh $configure_params --without-python --with-zlib --without-iconv # TODO: Get iconv working?
     make -j $threads
     make install
     popd || exit
@@ -283,7 +283,7 @@ pushd subs || exit
     #Fontconfig: Improves Drawtext Filter, HarfBuzz
     do_git_checkout $fontconfig_git $fontconfig_release fontconfig
     pushd fontconfig || exit
-    ./autogen.sh $configure_params --enable-libxml2
+    ./autogen.sh $configure_params --enable-libxml2 --disable-docs # ac_cv_va_copy=yes - Needed for 2.18.2 - Got this last flag from https://share.google/aimode/ze4wOlAZfJSm7wUen
     make -j $threads
     make install
     popd || exit
@@ -396,6 +396,7 @@ pushd video || exit
     	-DBUILD_THIRDPARTY=TRUE -DBUILD_SHARED_LIBS=0 \
         ..
     make -j $threads
+    patch libopenjp2.pc $patch_dir/libopenjp2.patch # Needed due to https://github.com/uclouvain/openjpeg/issues/1659
     make install
     popd || exit
 
@@ -404,12 +405,12 @@ pushd video || exit
     pushd aom || exit
     mkdir -p out
     cd out || exit
-    cmake -DCMAKE_TOOLCHAIN_FILE="../build/cmake/toolchains/x86_64-mingw-gcc.cmake" \
+    cmake -DCMAKE_TOOLCHAIN_FILE="../cmake/toolchains/x86_64-mingw-gcc.cmake" \
         -DCMAKE_INSTALL_PREFIX=$prefix \
         -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF \
         -DENABLE_EXAMPLES=OFF -DENABLE_TOOLS=OFF \
         ..
-    make # "-j $threads" removed since parallel builds seem to fail
+    make -j $threads
     make install
     popd || exit
 
