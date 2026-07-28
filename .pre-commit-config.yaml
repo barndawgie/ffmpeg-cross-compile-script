@@ -9,6 +9,7 @@ repos:
       - id: check-shebang-scripts-are-executable
       - id: end-of-file-fixer
       - id: trailing-whitespace
+        exclude: ^patches/.*\.patch$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.2
     hooks:

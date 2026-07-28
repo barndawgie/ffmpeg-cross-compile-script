@@ -1,0 +1,10 @@
+--- libopenjp2.pc.old	2026-07-27 19:06:25.633676646 -0700
++++ libopenjp2.pc	2026-07-27 19:04:00.323136316 -0700
+@@ -10,6 +10,6 @@
+ URL: http://www.openjpeg.org/
+ Version: 2.5.4
+ Libs: -L${libdir} -lopenjp2
+-Libs.private: -l-lpthread 
++Libs.private: -lpthread 
+ Cflags: -I${includedir}
+ Cflags.private: -DOPJ_STATIC
