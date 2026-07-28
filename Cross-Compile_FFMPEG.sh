@@ -29,7 +29,7 @@ bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.3.2"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.32.8" # TODO: Move to v3?
+sdl_release="release-2.32.8"  # FFMPEG Currently requires SDL2
 openssl_git="https://github.com/openssl/openssl.git"
 openssl_release="OpenSSL_1_1_1-stable" # TODO: Move to newer releases?
 libpng_git="https://github.com/glennrp/libpng.git"
@@ -92,6 +92,7 @@ ffmpeg_release="n8.1.2"
 FFMPEG_OPTIONS="\
     --enable-nonfree \
     --enable-gpl \
+    --enable-sdl2\
     --enable-libfdk-aac \
     --enable-libx264 \
     --enable-libx265 \
@@ -187,9 +188,8 @@ pushd libs || exit
     #openssl
     do_git_checkout $openssl_git $openssl_release openssl
     pushd openssl || exit
-    ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
-    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path \
-        no-shared no-dso zlib mingw64 no-tests
+    ./config --prefix=$prefix --cross-compile-prefix=$host- --libdir=$library_path \
+        no-shared no-dso no-docs no-tests zlib mingw64
     make -j $threads
     make install_sw
     popd || exit
