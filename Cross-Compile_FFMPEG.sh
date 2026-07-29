@@ -67,7 +67,7 @@ libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
 libsvtav1_version="v4.2.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n13.1.15.0"
-libvmaf_git="https://github.com/Netflix/vmaf.git" # TODO: Upgrade to VMAFv1
+libvmaf_git="https://github.com/Netflix/vmaf.git"
 libvmaf_release="v3.2.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
@@ -83,8 +83,8 @@ libass_release="0.17.5"
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.6"
-libbluray_git="https://code.videolan.org/videolan/libbluray.git" # TODO: Move to Meson for newer releases
-libbluray_release="1.3.4"
+libbluray_git="https://code.videolan.org/videolan/libbluray.git"
+libbluray_release="1.5.0"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n8.1.2"
 
@@ -112,8 +112,8 @@ FFMPEG_OPTIONS="\
     --enable-libdav1d \
     --enable-libsvtav1 \
     --enable-libvmaf \
-    --enable-libopus"
-    # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
+    --enable-libopus \
+    --enable-libbluray"
     # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
 # Helper Methods
@@ -470,10 +470,10 @@ pushd protocols || exit
     #libbluray
     do_git_checkout $libbluray_git $libbluray_release libbluray
     pushd libbluray || exit
-    autoreconf -i
-    ./configure $configure_params  --disable-doxygen-doc --disable-bdjava-jar
-    make -j $threads
-    make install
+    meson setup $meson_params -Denable_tools=false -Dbdj_jar=disabled ./build
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
 popd || exit
