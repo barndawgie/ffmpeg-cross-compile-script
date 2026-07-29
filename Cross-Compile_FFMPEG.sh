@@ -68,7 +68,7 @@ libsvtav1_version="v4.2.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n13.1.15.0"
 libvmaf_git="https://github.com/Netflix/vmaf.git" # TODO: Upgrade to VMAFv1
-libvmaf_release="v3.1.0"
+libvmaf_release="v3.2.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-14-3"
