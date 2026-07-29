@@ -29,9 +29,9 @@ bzip_pc_file_path="$patch_dir/bzip2.pc"
 zlib_git="https://github.com/madler/zlib.git"
 zlib_release="v1.3.2"
 sdl_git="https://github.com/libsdl-org/SDL.git"
-sdl_release="release-2.32.8" # TODO: Move to v3?
+sdl_release="release-2.32.8"  # FFMPEG Currently requires SDL2
 openssl_git="https://github.com/openssl/openssl.git"
-openssl_release="OpenSSL_1_1_1-stable" # TODO: Move to newer releases?
+openssl_release="openssl-4.0.1"
 libpng_git="https://github.com/glennrp/libpng.git"
 libpng_release="v1.6.58"
 libxml2_git="https://gitlab.gnome.org/GNOME/libxml2.git"
@@ -39,7 +39,7 @@ libxml2_release="v2.15.3"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="release-3.0.6"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
-libudfread_release="1.1.2" # TODO: move to Meson for newest release
+libudfread_release="1.2.0"
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
@@ -67,8 +67,8 @@ libsvtav1_git="https://gitlab.com/AOMediaCodec/SVT-AV1.git"
 libsvtav1_version="v4.2.0"
 ffnvcodec_git="https://github.com/FFmpeg/nv-codec-headers.git"
 ffnvcodec_release="n13.1.15.0"
-libvmaf_git="https://github.com/Netflix/vmaf.git" # TODO: Upgrade to VMAFv1
-libvmaf_release="v3.1.0"
+libvmaf_git="https://github.com/Netflix/vmaf.git"
+libvmaf_release="v3.2.0"
 
 libfreetype2_git="https://gitlab.freedesktop.org/freetype/freetype.git"
 libfreetype2_release="VER-2-14-3"
@@ -83,8 +83,8 @@ libass_release="0.17.5"
 
 srt_git="https://github.com/Haivision/srt.git"
 srt_release="v1.5.6"
-libbluray_git="https://code.videolan.org/videolan/libbluray.git" # TODO: Move to Meson for newer releases
-libbluray_release="1.3.4"
+libbluray_git="https://code.videolan.org/videolan/libbluray.git"
+libbluray_release="1.5.0"
 ffmpeg_git="https://git.ffmpeg.org/ffmpeg.git"
 ffmpeg_release="n8.1.2"
 
@@ -92,6 +92,7 @@ ffmpeg_release="n8.1.2"
 FFMPEG_OPTIONS="\
     --enable-nonfree \
     --enable-gpl \
+    --enable-sdl2\
     --enable-libfdk-aac \
     --enable-libx264 \
     --enable-libx265 \
@@ -111,8 +112,8 @@ FFMPEG_OPTIONS="\
     --enable-libdav1d \
     --enable-libsvtav1 \
     --enable-libvmaf \
-    --enable-libopus"
-    # --enable-libbluray # Broken in newer FFMPEG builds: https://trac.ffmpeg.org/ticket/10937
+    --enable-libopus \
+    --enable-libbluray"
     # Of Interest: -enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libmfx
 
 # Helper Methods
@@ -187,9 +188,8 @@ pushd libs || exit
     #openssl
     do_git_checkout $openssl_git $openssl_release openssl
     pushd openssl || exit
-    ./config --prefix=$prefix --cross-compile-prefix=$host- no-shared no-dso zlib
-    CC=$host-gcc AR=$host-ar RANLIB=$host-ranlib RC=$host-windres ./Configure --prefix=$prefix -L$library_path -I$include_path \
-        no-shared no-dso zlib mingw64 no-tests
+    ./config --prefix=$prefix --cross-compile-prefix=$host- --libdir=$library_path \
+        no-shared no-dso no-docs no-tests zlib mingw64
     make -j $threads
     make install_sw
     popd || exit
@@ -222,10 +222,10 @@ pushd libs || exit
     #libudfread: Needed for libbluray
     do_git_checkout $libudfread_git $libudfread_release libudfread
     pushd libudfread || exit
-    autoreconf -i
-    ./configure $configure_params
-    make -j $threads
-    make install
+    meson setup ./build $meson_params
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
     #CPUInfo: Needed for libstvav1
@@ -470,10 +470,10 @@ pushd protocols || exit
     #libbluray
     do_git_checkout $libbluray_git $libbluray_release libbluray
     pushd libbluray || exit
-    autoreconf -i
-    ./configure $configure_params  --disable-doxygen-doc --disable-bdjava-jar
-    make -j $threads
-    make install
+    meson setup $meson_params -Denable_tools=false -Dbdj_jar=disabled ./build
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
 popd || exit
