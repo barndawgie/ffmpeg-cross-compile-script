@@ -39,7 +39,7 @@ libxml2_release="v2.15.3"
 libzimg_git="https://github.com/sekrit-twc/zimg.git"
 libzimg_release="release-3.0.6"
 libudfread_git="https://code.videolan.org/videolan/libudfread.git"
-libudfread_release="1.1.2" # TODO: move to Meson for newest release
+libudfread_release="1.2.0"
 cpuinfo_git="https://github.com/pytorch/cpuinfo.git"
 cpuinfo_version="main"
 libunibreak_git="https://github.com/adah1972/libunibreak.git"
@@ -222,10 +222,10 @@ pushd libs || exit
     #libudfread: Needed for libbluray
     do_git_checkout $libudfread_git $libudfread_release libudfread
     pushd libudfread || exit
-    autoreconf -i
-    ./configure $configure_params
-    make -j $threads
-    make install
+    meson setup ./build $meson_params
+    cd ./build || exit
+    ninja
+    ninja install
     popd || exit
 
     #CPUInfo: Needed for libstvav1
